@@ -1,0 +1,26 @@
+{
+  "reply_format": "NXST_FLOW",
+  "flows": [
+    {
+      "cookie": "0x0",
+      "duration": 1097.767,
+      "table": 0,
+      "n_packets": 81,
+      "n_bytes": 6258,
+      "idle_age": 41,
+      "priority": 0,
+      "match": {},
+      "instructions": [
+        {
+          "type": "apply_actions",
+          "actions": [
+            {
+              "type": "output",
+              "port": "NORMAL"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
