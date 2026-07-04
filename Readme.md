@@ -1,31 +1,67 @@
-# Hands-On Assignment 2: The Cloud-Native OVS Datapath Challenge
+# The Cloud-Native OVS Datapath Challenge
 
-## Objective
-Demonstrate an understanding of Kubernetes VM orchestration and Open vSwitch (OVS) datapath fundamentals by deploying a containerized VM attached to an OVS bridge, and conceptualizing its transition to a DPU-accelerated hardware offload model.
+This repository contains a fully automated, production-grade setup to deploy KubeVirt Virtual Machines attached to an Open vSwitch (OVS) secondary network bridge using Multus CNI. It serves as a foundation for understanding vDPA hardware offload on NVIDIA DPUs.
 
-## Background
-The internship focuses on running VM networking through OVS that is fully hardware-offloaded to a DPU (like the NVIDIA BlueField-3) using vDPA. Before interacting with physical hardware, it is critical to understand the underlying software datapath plumbing in a Kubernetes environment.
+---
 
-## Tasks
-1. **Cluster Setup:** Spin up a lightweight local Kubernetes cluster (e.g., KinD, Minikube, k3s).
-2. **Networking & Orchestration Stack:**
-   * Install KubeVirt.
-   * Install Multus CNI.
-   * Install and configure an OVS CNI plugin (or configure a host OVS bridge and use a veth-based CNI to bridge into it).
-3. **VM Deployment:** Deploy a KubeVirt `VirtualMachine` (e.g., using a CirrOS image) that successfully attaches to the OVS secondary network.
-4. **Datapath Verification:** * Execute a ping test to/from the VM over the OVS-backed interface.
-   * Capture the OVS flow rules on the underlying node showing the VM's traffic traversing the bridge.
-5. **Hardware Offload Conceptualization:** Document exactly how this software datapath changes when moved to an NVIDIA BlueField-3 using vDPA and hardware offload (e.g., OVS-DOCA, switchdev mode).
+## 🚀 Prerequisites
 
-## Expected Outputs (Machine-Readable Formats Only)
-Please submit the following files exactly as named:
-1. `cluster_setup.sh`
-   * A purely executable Bash script that bootstraps the cluster, KubeVirt, Multus, and the OVS CNI. 
-2. `manifests.yaml`
-   * A single, valid multi-document YAML file containing all necessary Custom Resources (NetworkAttachmentDefinitions, VirtualMachine, etc.).
-3. `verification_flows.json`
-   * The raw machine-readable JSON output of the OVS flow dump (e.g., generated via `ovs-ofctl dump-flows <bridge> --format=json`).
-4. `ping_results.txt`
-   * The raw stdout dump of the ping test.
-5. `dpu_offload_concept.md`
-   * A Markdown document explaining the architectural shift from the implemented software stack to a hardware-accelerated vDPA architecture on a BlueField-3 DPU.
+Before starting, ensure you are running on a Linux machine (Native Ubuntu is highly recommended for KVM hardware virtualization speed) or Windows WSL2 with Docker Desktop.
+
+You only need one thing running:
+- **Docker** (Ensure the Docker daemon is started)
+
+*Note: The setup script will automatically detect and download all missing CLI tools (like `kind`, `kubectl`, and `virtctl`) locally to save you time!*
+
+---
+
+## 🛠️ One-Click Automated Setup
+
+We have engineered an advanced 13-step idempotent pipeline that handles the entire lifecycle automatically:
+
+1. **Validation**: Checks system resources and prerequisites.
+2. **Environment**: Safely cleans up old deployments and builds a fresh Kubernetes `KinD` cluster.
+3. **Network**: Installs Open vSwitch on the worker nodes, followed by Multus CNI and the OVS CNI plugin.
+4. **Virtualization**: Deploys the KubeVirt virtualization engine.
+5. **Workload**: Automatically deploys two VMs (`test-vm-1` and `test-vm-2`) and connects them to the secondary OVS datapath.
+6. **Verification**: Uses `sshpass` to perform an automated guest-level ICMP ping test directly from `test-vm-1` to `test-vm-2` across the OVS bridge.
+7. **Evidence Collection**: Captures the ping output and extracts the highly detailed OVS flow and MAC learning tables.
+
+### How to Run:
+Simply open your terminal in this directory and execute:
+```bash
+bash cluster_setup.sh
+```
+
+Sit back and watch the pipeline build your cluster and verify the datapath!
+
+---
+
+## 📂 Expected Automated Outputs
+
+Once the script completes, it will automatically generate the required verification files in your folder:
+
+1. **`ping_results.txt`** 
+   - Proves guest-to-guest connectivity with 0% packet loss.
+2. **`verification_flows.json`** 
+   - A detailed JSON dump containing the OVS flow rules, bridge configurations, learned MAC addresses, and capture metadata.
+
+*(You can view these files directly to verify the success of the datapath!)*
+
+---
+
+## 🧹 Cleanup
+
+To safely tear down the cluster and wipe the Docker nodes, simply run the built-in self-destruct command:
+
+```bash
+bash cluster_setup.sh cleanup
+```
+
+---
+
+## 🧠 Architectural Shift to DPUs
+
+To understand *why* we built this software datapath, and how this exact Kubernetes topology translates to blazing-fast hardware acceleration using an **NVIDIA BlueField-3 DPU, vDPA, and OVS-DOCA switchdev mode**, please read the included architectural document:
+
+👉 [Read the DPU Offload Concept Document](./dpu_offload_concept.md)
