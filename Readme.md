@@ -4,7 +4,7 @@ This repository contains a fully automated, production-grade setup to deploy Kub
 
 ---
 
-## 🚀 Prerequisites
+## Prerequisites
 
 Before starting, ensure you are running on a Linux machine (Native Ubuntu is highly recommended for KVM hardware virtualization speed) or Windows WSL2 with Docker Desktop.
 
@@ -15,7 +15,7 @@ You only need one thing running:
 
 ---
 
-## 🛠️ One-Click Automated Setup
+## One-Click Automated Setup
 
 We have engineered an advanced 13-step idempotent pipeline that handles the entire lifecycle automatically:
 
@@ -33,11 +33,13 @@ Simply open your terminal in this directory and execute:
 bash cluster_setup.sh
 ```
 
-Sit back and watch the pipeline build your cluster and verify the datapath!
 
+Sit back and watch the pipeline build your cluster and verify the datapath!
+<img width="1175" height="774" alt="Screenshot (3357)" src="https://github.com/user-attachments/assets/50ea2edc-666a-4250-a8b2-9f8691cd9bd5" />
+<img width="1920" height="1035" alt="Screenshot (3345)" src="https://github.com/user-attachments/assets/140e1db7-7409-4744-8d28-d413554f905d" />
 ---
 
-## 📂 Expected Automated Outputs
+## Expected Automated Outputs
 
 Once the script completes, it will automatically generate the required verification files in your folder:
 
@@ -47,10 +49,14 @@ Once the script completes, it will automatically generate the required verificat
    - A detailed JSON dump containing the OVS flow rules, bridge configurations, learned MAC addresses, and capture metadata.
 
 *(You can view these files directly to verify the success of the datapath!)*
+<img width="1067" height="994" alt="Screenshot (3356)" src="https://github.com/user-attachments/assets/0c27d44f-2aba-4c53-9e34-665fc148b7a0" />
+
+## Ping_result.txt and verification_flows.json
+<img width="1147" height="747" alt="Screenshot (3358)" src="https://github.com/user-attachments/assets/1cb0ab73-ec4c-483a-85ef-f1b160e8962d" />
 
 ---
 
-## 🧹 Cleanup
+## Cleanup
 
 To safely tear down the cluster and wipe the Docker nodes, simply run the built-in self-destruct command:
 
@@ -60,7 +66,7 @@ bash cluster_setup.sh cleanup
 
 ---
 
-## 🧠 Architectural Shift to DPUs
+## Architectural Shift to DPUs
 
 To understand *why* we built this software datapath, and how this exact Kubernetes topology translates to blazing-fast hardware acceleration using an **NVIDIA BlueField-3 DPU, vDPA, and OVS-DOCA switchdev mode**, please read the included architectural document:
 
