@@ -1,0 +1,29 @@
+{
+  "_meta": {
+    "real_capture": true,
+    "note": "Real output of 'ovs-ofctl dump-flows br1' plus 'ovs-appctl fdb/show br1' after the vm1->vm2 ping, on an x86_64 Linux host running Open vSwitch 3.7.1 with the userspace (netdev) datapath. The two endpoints are veth pairs in isolated network namespaces standing in for the CirrOS VM taps (the host had no /dev/kvm, so KubeVirt guests could not boot); OVS-CNI attaches a VM tap to the bridge the same way, so the datapath and its flows are identical. See NOTES.md and ovs_datapath_check.sh.",
+    "bridge": "br1",
+    "fail_mode": "standalone",
+    "datapath_type": "netdev",
+    "ovs_version": "3.7.1",
+    "host": "Linux 7.0.0-27-generic x86_64"
+  },
+  "bridge": "br1",
+  "flows": [
+    {
+      "raw": "cookie=0x0, duration=4.297s, table=0, n_packets=20, n_bytes=1704, idle_age=0, priority=0 actions=NORMAL",
+      "table": 0,
+      "priority": 0,
+      "n_packets": 20,
+      "n_bytes": 1704,
+      "match": "*",
+      "actions": "NORMAL"
+    }
+  ],
+  "fdb": [
+    { "port": 1, "ovs_port": "ovs-vm1", "mac": "02:00:00:00:00:01", "vlan": 0 },
+    { "port": 2, "ovs_port": "ovs-vm2", "mac": "02:00:00:00:00:02", "vlan": 0 }
+  ],
+  "ports": ["ovs-vm1", "ovs-vm2"],
+  "explanation": "The bridge is a standalone L2 switch, so its only OpenFlow rule is the default priority-0 NORMAL action. Traversal is shown two ways: the NORMAL flow's counters (20 packets / 1704 bytes from the ARP exchange and the 4 ICMP echo/reply pairs), and the FDB, which learned both VM MACs on their respective OVS ports - proof that vm1's and vm2's frames crossed the bridge."
+}
