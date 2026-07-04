@@ -1,0 +1,12 @@
+[
+  {
+    "cookie": "0x0",
+    "duration": "6461.386s",
+    "table": "0",
+    "n_packets": "681",
+    "n_bytes": "165690",
+    "idle_age": "29",
+    "priority": "0",
+    "actions": "NORMAL"
+  }
+]
