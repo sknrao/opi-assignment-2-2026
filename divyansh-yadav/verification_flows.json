@@ -1,0 +1,29 @@
+{
+  "flows": [
+    {
+      "info": {
+        "cookie": "0x0",
+        "duration": 3348.982,
+        "table": 0,
+        "n_packets": 191,
+        "n_bytes": 15362,
+        "idle_age": 44,
+        "priority": 0
+      },
+      "match": {},
+      "actions": [
+        {
+          "NORMAL": null
+        }
+      ]
+    }
+  ],
+  "_note": "OVS 3.1.0 (Debian Bookworm) lacks native --format=json support for ovs-ofctl dump-flows. The flows array above was synthesized from raw text output via parse_flows.py to match the info/match/actions nested schema emitted by modern OVS versions.",
+  "extra_diagnostics": {
+    "evidence_dump_ports": "OFPST_PORT reply (xid=0x2): 2 ports\n  port  6: rx pkts=61, bytes=4950, drop=0, errs=0, frame=0, over=0, crc=0\n           tx pkts=29, bytes=2390, drop=0, errs=0, coll=0\n  port LOCAL: rx pkts=55, bytes=4226, drop=0, errs=0, frame=0, over=0, crc=0\n           tx pkts=122, bytes=9956, drop=0, errs=0, coll=0\n",
+    "evidence_ofctl_show": "OFPT_FEATURES_REPLY (xid=0x2): dpid:0000028c6c4c7f41\nn_tables:254, n_buffers:0\ncapabilities: FLOW_STATS TABLE_STATS PORT_STATS QUEUE_STATS ARP_MATCH_IP\nactions: output enqueue set_vlan_vid set_vlan_pcp strip_vlan mod_dl_src mod_dl_dst mod_nw_src mod_nw_dst mod_nw_tos mod_tp_src mod_tp_dst\n 6(veth79298aec): addr:9e:ad:ad:a0:14:6a\n     config:     0\n     state:      0\n     current:    10GB-FD COPPER\n     speed: 10000 Mbps now, 0 Mbps max\n LOCAL(br-ovs): addr:02:8c:6c:4c:7f:41\n     config:     0\n     state:      0\n     current:    10GB-FD COPPER\n     speed: 10000 Mbps now, 0 Mbps max\nOFPT_GET_CONFIG_REPLY (xid=0x4): frags=normal miss_send_len=0\n",
+    "evidence_fdb_show": " port  VLAN  MAC                Age\n    6   100  ae:de:5c:8c:f5:15  195\n    6   100  ca:29:f7:b7:e4:2a  182\nLOCAL   100  02:8c:6c:4c:7f:41   45\n    6   100  0e:70:08:9c:2d:ef   45\n",
+    "evidence_port_tag": "_uuid               : 597db5f0-3026-4356-8bbc-b6dd6ec674bd\ninterfaces          : [3fbf4871-3d9c-46c6-9b66-00257184bc9d]\nname                : br-ovs\ntag                 : 100\nvlan_mode           : []\n",
+    "note": "Minor packet-count skew between flow stats and port stats is expected if traffic occurs between the consecutive capture commands."
+  }
+}
