@@ -1,0 +1,6 @@
+asus1@LAPTOP-9HPPRN5U:~$ POD=$(kubectl get pods -o name | grep virt-launcher-vm-alpha | head -1)
+echo "accel flag: $(kubectl exec $POD -- ps -ef | grep -oE '\-accel [a-z]+' | head -1)"
+echo "useEmulation: $(kubectl -n kubevirt get kubevirt kubevirt -o jsonpath='{.spec.configuration.developerConfiguration.useEmulation}')"
+
+accel flag: -accel tcg
+useEmulation: true

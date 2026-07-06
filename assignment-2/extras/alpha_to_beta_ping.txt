@@ -1,0 +1,22 @@
+spawn virtctl console vm-alpha --namespace default
+
+Successfully connected to vm-alpha console. Press Ctrl+] or Ctrl+5 to exit console.
+
+login as 'cirros' user. default password: 'gocubsgo'. use 'sudo' for root.
+vm-alpha login: gocubsgo
+Password: 
+Login incorrect
+vm-alpha login: cirros
+Password: 
+$ ping -c 5 192.168.100.2
+PING 192.168.100.2 (192.168.100.2): 56 data bytes
+64 bytes from 192.168.100.2: seq=0 ttl=64 time=3.399 ms
+64 bytes from 192.168.100.2: seq=1 ttl=64 time=1.605 ms
+64 bytes from 192.168.100.2: seq=2 ttl=64 time=0.942 ms
+64 bytes from 192.168.100.2: seq=3 ttl=64 time=2.207 ms
+64 bytes from 192.168.100.2: seq=4 ttl=64 time=1.325 ms
+
+--- 192.168.100.2 ping statistics ---
+5 packets transmitted, 5 packets received, 0% packet loss
+round-trip min/avg/max = 0.942/1.895/3.399 ms
+$ 

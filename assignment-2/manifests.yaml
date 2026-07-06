@@ -1,0 +1,124 @@
+# =============================================================================
+# manifests.yaml
+# NetworkAttachmentDefinition for the OVS bridge + two CirrOS KubeVirt VMs.
+# Apply with: kubectl apply -f manifests.yaml
+#
+# CHANGE (reproducibility): each VM now assigns its OVS-side eth1 IP at boot
+# via cloud-init (cloudInitNoCloud), so a fresh apply + boot brings the
+# 192.168.100.0/24 datapath up with NO manual `virtctl console` step.
+#   vm-alpha -> 192.168.100.1/24 on eth1
+#   vm-beta  -> 192.168.100.2/24 on eth1
+# =============================================================================
+---
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: ovs-datapath-net
+  namespace: default
+spec:
+  config: |
+    {
+      "cniVersion": "0.3.1",
+      "type": "ovs",
+      "bridge": "br-ovs"
+    }
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-alpha
+  namespace: default
+spec:
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: vm-alpha
+    spec:
+      domain:
+        cpu:
+          cores: 1
+        resources:
+          requests:
+            memory: 128Mi
+        devices:
+          interfaces:
+            - name: default-net
+              masquerade: {}
+            - name: ovs-net
+              bridge: {}
+          disks:
+            - name: containerdisk
+              disk:
+                bus: virtio
+            - name: cloudinitdisk
+              disk:
+                bus: virtio
+      networks:
+        - name: default-net
+          pod: {}
+        - name: ovs-net
+          multus:
+            networkName: ovs-datapath-net
+      volumes:
+        - name: containerdisk
+          containerDisk:
+            image: kubevirt/cirros-container-disk-demo:latest
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |
+              #!/bin/sh
+              # CirrOS: plain shell script only (no cloud-config).
+              # Bring up the OVS-side secondary NIC and assign its static IP.
+              ip link set eth1 up
+              ip addr add 192.168.100.1/24 dev eth1
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-beta
+  namespace: default
+spec:
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: vm-beta
+    spec:
+      domain:
+        cpu:
+          cores: 1
+        resources:
+          requests:
+            memory: 128Mi
+        devices:
+          interfaces:
+            - name: default-net
+              masquerade: {}
+            - name: ovs-net
+              bridge: {}
+          disks:
+            - name: containerdisk
+              disk:
+                bus: virtio
+            - name: cloudinitdisk
+              disk:
+                bus: virtio
+      networks:
+        - name: default-net
+          pod: {}
+        - name: ovs-net
+          multus:
+            networkName: ovs-datapath-net
+      volumes:
+        - name: containerdisk
+          containerDisk:
+            image: kubevirt/cirros-container-disk-demo:latest
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |
+              #!/bin/sh
+              # CirrOS: plain shell script only (no cloud-config).
+              # Bring up the OVS-side secondary NIC and assign its static IP.
+              ip link set eth1 up
+              ip addr add 192.168.100.2/24 dev eth1
