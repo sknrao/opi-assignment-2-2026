@@ -1,0 +1,26 @@
+# Real execution log - full stack on kind (arm64, colima), 2026-07-03T20:59:52Z
+## node arch
+ovs-dpu-control-plane v1.36.1 containerd://2.3.1
+## OVS bridge on the node (real)
+    15314877-9e3b-4c5f-b5e7-63bd05cb181f
+        Bridge br1
+            fail_mode: standalone
+            Port br1
+                Interface br1
+                    type: internal
+        ovs_version: "3.5.0"
+## stack pods (Multus, OVS-CNI, KubeVirt all Running)
+    kube-multus-ds-c7592                     Running
+    ovs-cni-amd64-cfzqd                      Running
+    virt-api-cbbf7fbb-4rmq5                  Running
+    virt-controller-7f46d8cdd5-5wdft         Running
+    virt-controller-7f46d8cdd5-mrdfj         Running
+    virt-handler-r6sp8                       Running
+    virt-operator-7c6599c69-khk2k            Running
+    virt-operator-7c6599c69-mqpq9            Running
+## KubeVirt phase
+Deployed
+## OVS-CNI NetworkAttachmentDefinition accepted
+ovs-net -> { "cniVersion": "0.4.0", "type": "ovs", "bridge": "br1" }
+## VM admission result (the blocker)
+Failure while starting VMI: admission webhook "virtualmachineinstances-create-validator.kubevirt.io" denied the request: currently, host-passthrough is the only model supported on Arm64
