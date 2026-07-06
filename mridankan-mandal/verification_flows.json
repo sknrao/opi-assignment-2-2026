@@ -1,0 +1,127 @@
+{
+  "bridge": "br-ovs",
+  "metadata": {
+    "ovs_version": "ovs-vsctl (Open vSwitch) 3.3.4",
+    "native_json_supported": false,
+    "note": "Local OVS build lacks native ovs-ofctl JSON output, so this file preserves raw dumps plus structured parsing."
+  },
+  "openflow_dump": {
+    "source_command": "ovs-ofctl dump-flows br-ovs",
+    "raw": "NXST_FLOW reply (xid=0x4):\n cookie=0x0, duration=1283.231s, table=0, n_packets=134, n_bytes=9609, idle_age=0, priority=0 actions=NORMAL",
+    "flow_count": 1,
+    "flows": [
+      {
+        "raw": " cookie=0x0, duration=1283.231s, table=0, n_packets=134, n_bytes=9609, idle_age=0, priority=0 actions=NORMAL",
+        "cookie": "0x0",
+        "table": 0,
+        "duration": "1283.231s",
+        "n_packets": 134,
+        "n_bytes": 9609,
+        "idle_age": 0,
+        "priority": 0,
+        "actions": "NORMAL"
+      }
+    ]
+  },
+  "datapath_dump": {
+    "source_command": "ovs-appctl bridge/dump-flows br-ovs",
+    "raw": "duration=1283s, n_packets=134, n_bytes=9609, priority=0,actions=NORMAL\ntable_id=254, duration=24931s, n_packets=0, n_bytes=0, priority=2,recirc_id=0,actions=drop\ntable_id=254, duration=24931s, n_packets=1, n_bytes=86, priority=0,reg0=0x1,actions=controller(reason=)\ntable_id=254, duration=24931s, n_packets=0, n_bytes=0, priority=0,reg0=0x2,actions=drop\ntable_id=254, duration=24931s, n_packets=0, n_bytes=0, priority=0,reg0=0x3,actions=drop",
+    "flow_count": 5,
+    "flows": [
+      {
+        "raw": "duration=1283s, n_packets=134, n_bytes=9609, priority=0,actions=NORMAL",
+        "cookie": null,
+        "table": null,
+        "duration": "1283s",
+        "n_packets": 134,
+        "n_bytes": 9609,
+        "idle_age": null,
+        "priority": 0,
+        "actions": "NORMAL"
+      },
+      {
+        "raw": "table_id=254, duration=24931s, n_packets=0, n_bytes=0, priority=2,recirc_id=0,actions=drop",
+        "cookie": null,
+        "table": 254,
+        "duration": "24931s",
+        "n_packets": 0,
+        "n_bytes": 0,
+        "idle_age": null,
+        "priority": 2,
+        "actions": "drop"
+      },
+      {
+        "raw": "table_id=254, duration=24931s, n_packets=1, n_bytes=86, priority=0,reg0=0x1,actions=controller(reason=)",
+        "cookie": null,
+        "table": 254,
+        "duration": "24931s",
+        "n_packets": 1,
+        "n_bytes": 86,
+        "idle_age": null,
+        "priority": 0,
+        "actions": "controller(reason=)"
+      },
+      {
+        "raw": "table_id=254, duration=24931s, n_packets=0, n_bytes=0, priority=0,reg0=0x2,actions=drop",
+        "cookie": null,
+        "table": 254,
+        "duration": "24931s",
+        "n_packets": 0,
+        "n_bytes": 0,
+        "idle_age": null,
+        "priority": 0,
+        "actions": "drop"
+      },
+      {
+        "raw": "table_id=254, duration=24931s, n_packets=0, n_bytes=0, priority=0,reg0=0x3,actions=drop",
+        "cookie": null,
+        "table": 254,
+        "duration": "24931s",
+        "n_packets": 0,
+        "n_bytes": 0,
+        "idle_age": null,
+        "priority": 0,
+        "actions": "drop"
+      }
+    ]
+  },
+  "fdb_dump": {
+    "source_command": "ovs-appctl fdb/show br-ovs",
+    "raw": " port  VLAN  MAC                Age\n    1     0  fe:f3:e0:02:90:a3   62\n    1     0  be:ee:42:cd:ac:16   58\n    2     0  d2:8f:11:58:14:d5    1\n    1     0  02:de:ad:be:ef:10    0",
+    "entry_count": 4,
+    "entries": [
+      {
+        "port": "1",
+        "vlan": 0,
+        "mac": "fe:f3:e0:02:90:a3",
+        "age": 62
+      },
+      {
+        "port": "1",
+        "vlan": 0,
+        "mac": "be:ee:42:cd:ac:16",
+        "age": 58
+      },
+      {
+        "port": "2",
+        "vlan": 0,
+        "mac": "d2:8f:11:58:14:d5",
+        "age": 1
+      },
+      {
+        "port": "1",
+        "vlan": 0,
+        "mac": "02:de:ad:be:ef:10",
+        "age": 0
+      }
+    ]
+  },
+  "port_stats_dump": {
+    "source_command": "ovs-ofctl dump-ports br-ovs",
+    "raw": "OFPST_PORT reply (xid=0x2): 3 ports\n  port LOCAL: rx pkts=953, bytes=43788, drop=0, errs=0, frame=0, over=0, crc=0\n           tx pkts=21, bytes=1566, drop=0, errs=0, coll=0\n  port  1: rx pkts=477, bytes=40226, drop=0, errs=0, frame=0, over=0, crc=0\n           tx pkts=680, bytes=35496, drop=0, errs=0, coll=0\n  port  2: rx pkts=642, bytes=32720, drop=0, errs=0, frame=0, over=0, crc=0\n           tx pkts=506, bytes=42200, drop=0, errs=0, coll=0"
+  },
+  "ovs_vsctl_show": {
+    "source_command": "ovs-vsctl show",
+    "raw": "e17ddc3f-b05e-4ebc-a59c-7790070d2242\n    Bridge br-ovs\n        Port br-ovs\n            Interface br-ovs\n                type: internal\n        Port peer-host\n            Interface peer-host\n        Port veth-ovs\n            Interface veth-ovs\n    ovs_version: \"3.3.4\""
+  }
+}
