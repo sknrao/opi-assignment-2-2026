@@ -1,9 +1,9 @@
-# How to produce / reproduce the evidence
+# Evidence Reproduction Record
 
 `ping_results.txt`, `verification_flows.json`, and the `evidence/` bundle are generated
-by a successful `cluster_setup.sh` run. Pick whichever path matches your machine.
+by a successful `cluster_setup.sh` run. The paths below document equivalent reproduction routes used for review.
 
-## Option 1 — GitHub Actions (recommended, no local setup)
+## Path 1 — GitHub Actions (primary review path)
 
 The repo ships a workflow that runs the whole stack on a GHA `ubuntu-latest` runner with
 **real nested KVM** (`-accel kvm` — see `evidence/kvm_proof.txt`) and uploads the full
@@ -23,7 +23,7 @@ The `Verify artifacts` step gates the build on ≥4 `0% packet loss` blocks (2 p
 `evidence/` bundle, and a parser round-trip check — a green run guarantees genuine
 evidence.
 
-## Option 2 — Linux host with Docker + `/dev/kvm`
+## Path 2 — Linux host with Docker + `/dev/kvm`
 
 ```bash
 docker info                       # daemon must be running
@@ -40,14 +40,13 @@ Re-run verification only (without rebuilding the cluster):
 ./verify_datapath.sh
 ```
 
-## Option 3 — Apple Silicon / no KVM (slow, best-effort)
+## Path 3 — Apple Silicon / no KVM (slow, best-effort)
 
 `cluster_setup.sh` auto-detects the missing `/dev/kvm`, installs KubeVirt v1.9 with
 the `CrossArchitectureVirtualization` gate, and runs the guests as amd64 under QEMU
-TCG. Give Docker Desktop ≥ 8 GB RAM. Boot can take tens of minutes; Options 1–2 are
-strongly preferred for fast, reliable captures.
+TCG. Boot can take tens of minutes; Paths 1–2 provide faster and more reliable captures.
 
-## Verify the artifacts locally
+## Local artifact validation
 
 ```bash
 # 4 zero-loss blocks: pod→vm-a, pod→vm-b, vm-a→vm-b (console), vm-b→vm-a (console)
@@ -55,7 +54,7 @@ grep -c "0% packet loss" ping_results.txt        # expect 4
 
 cmp -s evidence/flows_raw.txt evidence/flows_after.txt && echo "flows alias OK"
 
-# JSON has 5 classifier flows, 20 datapath megaflows, 5 FDB entries
+# JSON has 5 classifier flows, 7 datapath megaflows, 6 FDB entries
 python3 -c "import json; d=json.load(open('verification_flows.json')); \
   print('flows:', len(d['flows']), 'datapath:', len(d['datapath_flows']), 'fdb:', len(d['fdb']))"
 
@@ -67,5 +66,5 @@ python3 -c "import json; a=json.load(open('verification_flows.json')); \
     assert len(a[k])==len(b[k]), k; \
   print('round-trip OK')"
 
-# For a full reviewer walkthrough, see SUBMIT.md
+# Full reviewer walkthrough: see SUBMIT.md
 ```

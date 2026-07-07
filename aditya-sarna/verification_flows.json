@@ -1,7 +1,7 @@
 {
   "_meta": {
-    "generated_by": "flows_to_json.py --bundle",
-    "timestamp_utc": "2026-07-06T20:14:43Z",
+    "generated_by": "cluster_setup.sh capture_ovs_evidence()",
+    "timestamp_utc": "2026-07-06T23:47:13Z",
     "bridge": "br1",
     "node": "ovs-kubevirt-control-plane",
     "ovs_version": "ovs-vsctl (Open vSwitch) 3.5.0",
@@ -14,235 +14,145 @@
   "bridge": "br1",
   "flows": [
     {
-      "orig": "cookie=0x0, duration=45.231s, table=0, n_packets=14, n_bytes=1372, idle_age=0, priority=100,ip,nw_src=10.10.0.10 actions=NORMAL",
-      "cookie": 0,
+      "orig": "cookie=0x0, duration=21.123s, table=0, n_packets=13, n_bytes=1274, idle_age=1, priority=100,ip,nw_src=10.10.0.10 actions=NORMAL",
+      "cookie": "0x0",
       "table": 0,
-      "n_packets": 14,
-      "n_bytes": 1372,
-      "idle_age": 0,
       "priority": 100,
-      "duration_s": 45.231,
-      "match": "ip,nw_src=10.10.0.10",
+      "duration_s": 21.123,
+      "n_packets": 13,
+      "n_bytes": 1274,
+      "match": "nw_src=10.10.0.10",
       "actions": "NORMAL"
     },
     {
-      "orig": "cookie=0x0, duration=45.128s, table=0, n_packets=14, n_bytes=1372, idle_age=0, priority=100,ip,nw_src=10.10.0.11 actions=NORMAL",
-      "cookie": 0,
+      "orig": "cookie=0x0, duration=21.082s, table=0, n_packets=13, n_bytes=1274, idle_age=1, priority=100,ip,nw_src=10.10.0.11 actions=NORMAL",
+      "cookie": "0x0",
       "table": 0,
-      "n_packets": 14,
-      "n_bytes": 1372,
-      "idle_age": 0,
       "priority": 100,
-      "duration_s": 45.128,
-      "match": "ip,nw_src=10.10.0.11",
+      "duration_s": 21.082,
+      "n_packets": 13,
+      "n_bytes": 1274,
+      "match": "nw_src=10.10.0.11",
       "actions": "NORMAL"
     },
     {
-      "orig": "cookie=0x0, duration=45.015s, table=0, n_packets=8, n_bytes=784, idle_age=1, priority=100,ip,nw_src=10.10.0.20 actions=NORMAL",
-      "cookie": 0,
+      "orig": "cookie=0x0, duration=21.043s, table=0, n_packets=8, n_bytes=784, idle_age=14, priority=100,ip,nw_src=10.10.0.20 actions=NORMAL",
+      "cookie": "0x0",
       "table": 0,
+      "priority": 100,
+      "duration_s": 21.043,
       "n_packets": 8,
       "n_bytes": 784,
-      "idle_age": 1,
-      "priority": 100,
-      "duration_s": 45.015,
-      "match": "ip,nw_src=10.10.0.20",
+      "match": "nw_src=10.10.0.20",
       "actions": "NORMAL"
     },
     {
-      "orig": "cookie=0x0, duration=44.998s, table=0, n_packets=8, n_bytes=336, idle_age=3, priority=90,arp actions=NORMAL",
-      "cookie": 0,
+      "orig": "cookie=0x0, duration=21.004s, table=0, n_packets=8, n_bytes=336, idle_age=6, priority=90,arp actions=NORMAL",
+      "cookie": "0x0",
       "table": 0,
+      "priority": 90,
+      "duration_s": 21.004,
       "n_packets": 8,
       "n_bytes": 336,
-      "idle_age": 3,
-      "priority": 90,
-      "duration_s": 44.998,
       "match": "arp",
       "actions": "NORMAL"
     },
     {
-      "orig": "cookie=0x0, duration=44.876s, table=0, n_packets=15, n_bytes=1260, idle_age=5, priority=0 actions=NORMAL",
-      "cookie": 0,
+      "orig": "cookie=0x0, duration=20.964s, table=0, n_packets=9, n_bytes=630, idle_age=1, priority=0 actions=NORMAL",
+      "cookie": "0x0",
       "table": 0,
-      "n_packets": 15,
-      "n_bytes": 1260,
-      "idle_age": 5,
       "priority": 0,
-      "duration_s": 44.876,
+      "duration_s": 20.964,
+      "n_packets": 9,
+      "n_bytes": 630,
       "match": "*",
       "actions": "NORMAL"
     }
   ],
   "datapath_flows": [
     {
-      "orig": "recirc_id(0),in_port(3),eth(src=02:a0:00:00:00:0b,dst=33:33:00:00:00:16),eth_type(0x86dd),ipv6(frag=no),key32(00 00/00 00), packets:3, bytes:270, used:9.692s, actions:push_vlan(vid=100,pcp=0),1,pop_vlan,2,4",
-      "packets": 3,
-      "bytes": 270,
-      "used_s": 9.692,
-      "actions": "push_vlan(vid=100,pcp=0),1,pop_vlan,2,4"
-    },
-    {
-      "orig": "recirc_id(0),in_port(2),eth(src=02:a0:00:00:00:14,dst=ff:ff:ff:ff:ff:ff),eth_type(0x0806),arp(sip=10.10.0.20,tip=10.10.0.10,op=1/0xff), packets:3, bytes:126, used:6.623s, actions:push_vlan(vid=100,pcp=0),1,pop_vlan,3,4",
-      "packets": 3,
-      "bytes": 126,
-      "used_s": 6.623,
-      "actions": "push_vlan(vid=100,pcp=0),1,pop_vlan,3,4"
-    },
-    {
-      "orig": "recirc_id(0),in_port(2),eth(src=02:a0:00:00:00:14,dst=02:a0:00:00:00:0b),eth_type(0x0800),ipv4(frag=no), packets:4, bytes:392, used:0.300s, actions:3",
-      "packets": 4,
-      "bytes": 392,
-      "used_s": 0.3,
-      "actions": "3"
-    },
-    {
-      "orig": "recirc_id(0),in_port(4),eth(src=0a:96:41:2e:90:5a,dst=33:33:00:00:00:02),eth_type(0x86dd),ipv6(frag=no),key32(00 00/00 00), packets:5, bytes:350, used:6.011s, actions:push_vlan(vid=100,pcp=0),1,pop_vlan,2,3",
-      "packets": 5,
-      "bytes": 350,
-      "used_s": 6.011,
-      "actions": "push_vlan(vid=100,pcp=0),1,pop_vlan,2,3"
-    },
-    {
-      "orig": "recirc_id(0),in_port(4),eth(src=02:a0:00:00:00:0a,dst=33:33:00:00:00:02),eth_type(0x86dd),ipv6(frag=no),key32(00 00/00 00), packets:2, bytes:140, used:2.024s, actions:push_vlan(vid=100,pcp=0),1,pop_vlan,2,3",
-      "packets": 2,
-      "bytes": 140,
-      "used_s": 2.024,
-      "actions": "push_vlan(vid=100,pcp=0),1,pop_vlan,2,3"
-    },
-    {
-      "orig": "recirc_id(0),in_port(3),eth(src=02:a0:00:00:00:0b,dst=33:33:00:00:00:02),eth_type(0x86dd),ipv6(frag=no),key32(00 00/00 00), packets:2, bytes:140, used:2.240s, actions:push_vlan(vid=100,pcp=0),1,pop_vlan,2,4",
-      "packets": 2,
-      "bytes": 140,
-      "used_s": 2.24,
-      "actions": "push_vlan(vid=100,pcp=0),1,pop_vlan,2,4"
-    },
-    {
-      "orig": "recirc_id(0),in_port(4),eth(src=02:a0:00:00:00:0a,dst=02:a0:00:00:00:14),eth_type(0x0800),ipv4(frag=no), packets:4, bytes:392, used:3.364s, actions:2",
-      "packets": 4,
-      "bytes": 392,
-      "used_s": 3.364,
-      "actions": "2"
-    },
-    {
-      "orig": "recirc_id(0),in_port(3),eth(src=5e:b3:8a:35:86:59,dst=33:33:00:00:00:02),eth_type(0x86dd),ipv6(frag=no),key32(00 00/00 00), packets:5, bytes:350, used:7.035s, actions:push_vlan(vid=100,pcp=0),1,pop_vlan,2,4",
-      "packets": 5,
-      "bytes": 350,
-      "used_s": 7.035,
-      "actions": "push_vlan(vid=100,pcp=0),1,pop_vlan,2,4"
-    },
-    {
-      "orig": "recirc_id(0),in_port(2),eth(src=02:a0:00:00:00:14,dst=ff:ff:ff:ff:ff:ff),eth_type(0x0806),arp(sip=10.10.0.20,tip=10.10.0.11,op=1/0xff), packets:0, bytes:0, used:never, actions:push_vlan(vid=100,pcp=0),1,pop_vlan,3,4",
+      "orig": "recirc_id(0),in_port(3),eth(src=1e:5f:5a:73:79:e2,dst=33:33:00:00:00:02),eth_type(0x86dd),ipv6(frag=no),key32(00 00/00 00), packets:0, bytes:0, used:never, actions:push_vlan(vid=100,pcp=0),1,pop_vlan,2,4",
       "packets": 0,
       "bytes": 0,
       "used_s": null,
-      "actions": "push_vlan(vid=100,pcp=0),1,pop_vlan,3,4"
+      "actions": "push_vlan(vid=100,pcp=0),1,pop_vlan,2,4"
     },
     {
-      "orig": "recirc_id(0),in_port(2),eth(src=02:a0:00:00:00:14,dst=02:a0:00:00:00:0a),eth_type(0x0800),ipv4(frag=no), packets:4, bytes:392, used:3.366s, actions:4",
-      "packets": 4,
-      "bytes": 392,
-      "used_s": 3.366,
-      "actions": "4"
+      "orig": "recirc_id(0),in_port(3),eth(src=ea:93:04:f6:97:bf,dst=33:33:00:00:00:02),eth_type(0x86dd),ipv6(frag=no),key32(00 00/00 00), packets:0, bytes:0, used:never, actions:push_vlan(vid=100,pcp=0),1,pop_vlan,2,4",
+      "packets": 0,
+      "bytes": 0,
+      "used_s": null,
+      "actions": "push_vlan(vid=100,pcp=0),1,pop_vlan,2,4"
     },
     {
-      "orig": "recirc_id(0),in_port(4),eth(src=02:a0:00:00:00:0a,dst=33:33:00:00:00:16),eth_type(0x86dd),ipv6(frag=no),key32(00 00/00 00), packets:3, bytes:270, used:9.729s, actions:push_vlan(vid=100,pcp=0),1,pop_vlan,2,3",
-      "packets": 3,
-      "bytes": 270,
-      "used_s": 9.729,
+      "orig": "recirc_id(0),in_port(4),eth(src=2a:e4:0b:81:5d:5b,dst=33:33:00:00:00:02),eth_type(0x86dd),ipv6(frag=no),key32(00 00/00 00), packets:1, bytes:70, used:2.710s, actions:push_vlan(vid=100,pcp=0),1,pop_vlan,2,3",
+      "packets": 1,
+      "bytes": 70,
+      "used_s": 2.71,
       "actions": "push_vlan(vid=100,pcp=0),1,pop_vlan,2,3"
     },
     {
-      "orig": "recirc_id(0),in_port(2),eth(src=02:a0:00:00:00:14,dst=02:a0:00:00:00:0a),eth_type(0x0806), packets:0, bytes:0, used:never, actions:4",
-      "packets": 0,
-      "bytes": 0,
-      "used_s": null,
+      "orig": "recirc_id(0),in_port(3),eth(src=02:a0:00:00:00:0a,dst=02:a0:00:00:00:0b),eth_type(0x0800),ipv4(src=10.10.0.10,frag=no), packets:9, bytes:882, used:0.194s, actions:4",
+      "packets": 9,
+      "bytes": 882,
+      "used_s": 0.194,
       "actions": "4"
     },
     {
-      "orig": "recirc_id(0),in_port(3),eth(src=02:a0:00:00:00:0b,dst=02:a0:00:00:00:14),eth_type(0x0806), packets:1, bytes:42, used:1.432s, actions:2",
+      "orig": "recirc_id(0),in_port(4),eth(src=02:a0:00:00:00:0b,dst=02:a0:00:00:00:0a),eth_type(0x0800),ipv4(src=10.10.0.11,frag=no), packets:9, bytes:882, used:0.194s, actions:3",
+      "packets": 9,
+      "bytes": 882,
+      "used_s": 0.194,
+      "actions": "3"
+    },
+    {
+      "orig": "recirc_id(0),in_port(4),eth(src=02:a0:00:00:00:0b,dst=02:a0:00:00:00:0a),eth_type(0x0806), packets:1, bytes:42, used:6.279s, actions:3",
       "packets": 1,
       "bytes": 42,
-      "used_s": 1.432,
-      "actions": "2"
+      "used_s": 6.279,
+      "actions": "3"
     },
     {
-      "orig": "recirc_id(0),in_port(3),eth(src=02:a0:00:00:00:0b,dst=02:a0:00:00:00:14),eth_type(0x0800),ipv4(frag=no), packets:4, bytes:392, used:0.300s, actions:2",
-      "packets": 4,
-      "bytes": 392,
-      "used_s": 0.3,
-      "actions": "2"
-    },
-    {
-      "orig": "recirc_id(0),in_port(4),eth(src=02:a0:00:00:00:0a,dst=02:a0:00:00:00:14),eth_type(0x0806), packets:1, bytes:42, used:1.361s, actions:2",
-      "packets": 1,
-      "bytes": 42,
-      "used_s": 1.361,
-      "actions": "2"
-    },
-    {
-      "orig": "recirc_id(0),in_port(2),eth(src=02:a0:00:00:00:14,dst=02:a0:00:00:00:0b),eth_type(0x0806), packets:0, bytes:0, used:never, actions:3",
+      "orig": "recirc_id(0),in_port(3),eth(src=02:a0:00:00:00:0a,dst=02:a0:00:00:00:0b),eth_type(0x0806), packets:0, bytes:0, used:never, actions:4",
       "packets": 0,
       "bytes": 0,
       "used_s": null,
-      "actions": "3"
-    },
-    {
-      "orig": "recirc_id(0),in_port(4),eth(src=02:a0:00:00:00:0a,dst=02:a0:00:00:00:0b),eth_type(0x0800),ipv4(frag=no), packets:5, bytes:490, used:0.252s, actions:3",
-      "packets": 5,
-      "bytes": 490,
-      "used_s": 0.252,
-      "actions": "3"
-    },
-    {
-      "orig": "recirc_id(0),in_port(3),eth(src=02:a0:00:00:00:0b,dst=02:a0:00:00:00:0a),eth_type(0x0800),ipv4(frag=no), packets:5, bytes:490, used:0.248s, actions:4",
-      "packets": 5,
-      "bytes": 490,
-      "used_s": 0.248,
-      "actions": "4"
-    },
-    {
-      "orig": "recirc_id(0),in_port(4),eth(src=02:a0:00:00:00:0a,dst=02:a0:00:00:00:0b),eth_type(0x0806), packets:1, bytes:42, used:1.845s, actions:3",
-      "packets": 1,
-      "bytes": 42,
-      "used_s": 1.845,
-      "actions": "3"
-    },
-    {
-      "orig": "recirc_id(0),in_port(3),eth(src=02:a0:00:00:00:0b,dst=02:a0:00:00:00:0a),eth_type(0x0806), packets:1, bytes:42, used:1.612s, actions:4",
-      "packets": 1,
-      "bytes": 42,
-      "used_s": 1.612,
       "actions": "4"
     }
   ],
   "fdb": [
     {
+      "port": 1,
+      "vlan": 100,
+      "mac": "02:a0:00:00:00:14",
+      "age_s": "13"
+    },
+    {
       "port": 2,
       "vlan": 100,
-      "mac": "5e:b3:8a:35:86:59",
+      "mac": "1e:5f:5a:73:79:e2",
       "age_s": "7"
     },
     {
       "port": 3,
       "vlan": 100,
-      "mac": "0a:96:41:2e:90:5a",
-      "age_s": "5"
-    },
-    {
-      "port": 3,
-      "vlan": 100,
-      "mac": "02:a0:00:00:00:0a",
-      "age_s": "1"
-    },
-    {
-      "port": 1,
-      "vlan": 100,
-      "mac": "02:a0:00:00:00:14",
-      "age_s": "0"
+      "mac": "2a:e4:0b:81:5d:5b",
+      "age_s": "3"
     },
     {
       "port": 2,
+      "vlan": 100,
+      "mac": "ea:93:04:f6:97:bf",
+      "age_s": "2"
+    },
+    {
+      "port": 2,
+      "vlan": 100,
+      "mac": "02:a0:00:00:00:0a",
+      "age_s": "0"
+    },
+    {
+      "port": 3,
       "vlan": 100,
       "mac": "02:a0:00:00:00:0b",
       "age_s": "0"
@@ -251,24 +161,24 @@
   "ports": [
     {
       "ofport": "1",
-      "name": "veth643da979",
-      "mac": "46:a2:44:90:26:44"
+      "name": "vethe9e7495c",
+      "mac": "62:b8:89:b2:bf:06"
     },
     {
       "ofport": "2",
-      "name": "veth0cd36616",
-      "mac": "72:f1:f7:e3:3a:30"
+      "name": "veth50c5c8b3",
+      "mac": "f2:69:44:12:8c:17"
     },
     {
       "ofport": "3",
-      "name": "veth643d6326",
-      "mac": "c6:17:9a:50:f7:28"
+      "name": "veth733f008d",
+      "mac": "f6:78:e7:f1:a3:03"
     },
     {
       "ofport": "LOCAL",
       "name": "br1",
-      "mac": "6e:89:17:4f:30:4a"
+      "mac": "86:e1:7d:59:59:4c"
     }
   ],
-  "bridge_topology": "ee01dffb-96be-4de0-bd30-6a310f8321f6\n    Bridge br1\n        fail_mode: standalone\n        Port veth0cd36616\n            tag: 100\n            Interface veth0cd36616\n        Port veth643da979\n            tag: 100\n            Interface veth643da979\n        Port veth643d6326\n            tag: 100\n            Interface veth643d6326\n        Port br1\n            Interface br1\n                type: internal\n    ovs_version: \"3.5.0\"\n"
+  "bridge_topology": "46541be4-f6c1-4a35-9f17-72d9b8b5e1d9\n    Bridge br1\n        fail_mode: standalone\n        Port veth50c5c8b3\n            tag: 100\n            Interface veth50c5c8b3\n        Port vethe9e7495c\n            tag: 100\n            Interface vethe9e7495c\n        Port br1\n            Interface br1\n                type: internal\n        Port veth733f008d\n            tag: 100\n            Interface veth733f008d\n    ovs_version: \"3.5.0\"\n"
 }

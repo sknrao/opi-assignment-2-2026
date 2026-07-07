@@ -2,7 +2,7 @@
 
 
 === /dev/kvm on node ovs-kubevirt-control-plane ===
-crw-rw-rw- 1 root render 10, 232 Jul  6 22:40 /dev/kvm
+crw-rw-rw- 1 root render 10, 232 Jul  6 23:46 /dev/kvm
 
 === QEMU accelerator flag on virt-launcher-vm-a ===
 -accel kvm

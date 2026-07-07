@@ -1,19 +1,19 @@
-# How to verify this submission in 5 minutes
+# Mentor Review Checklist (5 minutes)
 
-## What you need
+## Review prerequisites
 
 ```bash
-git clone <this-repo> && cd <repo>
+git clone <assignment-fork> && cd <repo>/aditya-sarna
 python3 --version   # any 3.8+
 ```
 
-No cluster needed for verification. Everything below runs locally against the committed files.
+No cluster is required for this review flow. The checks below execute locally against committed files.
 
-## Option B PR requirement (must include)
+## Option B PR packaging (included)
 
-For the final assignment submission PR to the chosen assignment repository, create a new top-level folder named with your full name. For this submission, use `aditya-sarna` and place all deliverables for this assignment inside that folder.
+This submission uses the top-level folder `aditya-sarna`, with required deliverables and supporting artifacts collocated for reviewer traceability.
 
-## Step 1 — Read the topology (30 sec)
+## Step 1 — Topology scan (30 sec)
 
 ```
 br1 (OVS, VLAN 100 access ports)
@@ -25,12 +25,12 @@ br1 (OVS, VLAN 100 access ports)
 Two VMs + one pod, all on the same OVS bridge. Per-source classifier rules installed
 before the pings so the evidence proves classification, not just forwarding.
 
-## Step 2 — Check the flow evidence (1 min)
+## Step 2 — Flow evidence checks (1 min)
 
 ```bash
 # See classifier rules with non-zero hit counts
 cat evidence/flows_before.txt   # single NORMAL rule before install_classifier_flows()
-cat evidence/flows_after.txt    # 5 rules after; nw_src rules show n_packets=14/14/8
+cat evidence/flows_after.txt    # 5 rules after; nw_src rules show n_packets=13/13/8
 
 # flows_raw and flows_after must be identical (capture keeps them in sync)
 cmp -s evidence/flows_raw.txt evidence/flows_after.txt && echo "flows_raw == flows_after OK"
@@ -49,13 +49,13 @@ print(f'  flows={len(a[\"flows\"])} datapath={len(a[\"datapath_flows\"])} fdb={l
 "
 ```
 
-Expected output:
+Expected output signature:
 ```
 PASS: JSON matches round-trip parse of raw text
-  flows=5 datapath=20 fdb=5 access_vlans=[100]
+  flows=5 datapath=7 fdb=6 access_vlans=[100]
 ```
 
-## Step 3 — Check the ping evidence (1 min)
+## Step 3 — Ping evidence checks (1 min)
 
 ```bash
 # 4 zero-loss blocks: pod→vm-a, pod→vm-b, vm-a→vm-b, vm-b→vm-a
@@ -69,7 +69,7 @@ cat evidence/console_ping_vm-a_to_vm-b.txt
 cat evidence/console_ping_vm-b_to_vm-a.txt
 ```
 
-## Step 4 — Trace a MAC from manifest to FDB to megaflow (1 min)
+## Step 4 — MAC trace: manifest → FDB → megaflow (1 min)
 
 ```bash
 python3 -c "
@@ -88,24 +88,24 @@ for f in vm_a_flows:
 "
 ```
 
-This should show `mac learned on port N, VLAN 100` and at least two megaflows
-(vm-a→pod: 4 packets; vm-a→vm-b: 5 packets).
+Expected signal: `mac learned on port N, VLAN 100` and at least one active megaflow
+with `packets=9` for vm-a→vm-b and vm-b→vm-a IPv4 (`actions=4` / `actions=3`).
 
-## Step 5 — Check the execution mode disclosure (30 sec)
+## Step 5 — Execution mode disclosure (30 sec)
 
 ```bash
 cat evidence/execution_mode.txt   # useEmulation disabled, -accel kvm
 cat evidence/kvm_proof.txt        # /dev/kvm in KinD node, vmx flags, -accel kvm
 ```
 
-## Step 6 — Reproduce in CI (optional, ~20 min)
+## Step 6 — CI reproduction (optional, ~20 min)
 
 ```bash
 # Fork the repo, then:
 gh workflow run "Capture OVS Evidence"
 gh run watch
 gh run download --name ovs-evidence -D artifacts
-diff artifacts/verification_flows.json verification_flows.json  # should match schema
+diff artifacts/verification_flows.json verification_flows.json  # expected: schema-compatible output
 ```
 
 The `Verify artifacts` CI step fails unless:

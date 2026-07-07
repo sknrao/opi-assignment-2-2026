@@ -8,37 +8,66 @@ from pathlib import Path
 
 def parse_ping_directions(ping):
     directions = []
-    markers = [
-        (r"\$ kubectl exec ovs-ping-pod -- ping -c \d+ 10\.10\.0\.10", "pod → vm-a", "ovs-ping-pod", "vm-a", "10.10.0.10", "kubectl"),
-        (r"\$ kubectl exec ovs-ping-pod -- ping -c \d+ 10\.10\.0\.11", "pod → vm-b", "ovs-ping-pod", "vm-b", "10.10.0.11", "kubectl"),
-        (r"DIRECTION 3:.*", "vm-a → vm-b", "vm-a", "vm-b", "10.10.0.11", "virtctl"),
-        (r"DIRECTION 4:.*", "vm-b → vm-a", "vm-b", "vm-a", "10.10.0.10", "virtctl"),
+    specs = [
+        {
+            "label": "pod → vm-a",
+            "source": "ovs-ping-pod",
+            "target": "vm-a",
+            "targetIp": "10.10.0.10",
+            "method": "kubectl",
+            "starts": [r"\$ kubectl exec ovs-ping-pod -- ping -c \d+ 10\.10\.0\.10"],
+        },
+        {
+            "label": "pod → vm-b",
+            "source": "ovs-ping-pod",
+            "target": "vm-b",
+            "targetIp": "10.10.0.11",
+            "method": "kubectl",
+            "starts": [r"\$ kubectl exec ovs-ping-pod -- ping -c \d+ 10\.10\.0\.11"],
+        },
+        {
+            "label": "vm-a → vm-b",
+            "source": "vm-a",
+            "target": "vm-b",
+            "targetIp": "10.10.0.11",
+            "method": "virtctl",
+            "starts": [r"DIRECTION 3:.*", r"\$ virtctl console vm-a[^\n]*", r"----- DIRECTION: vm-a[^\n]*"],
+        },
+        {
+            "label": "vm-b → vm-a",
+            "source": "vm-b",
+            "target": "vm-a",
+            "targetIp": "10.10.0.10",
+            "method": "virtctl",
+            "starts": [r"DIRECTION 4:.*", r"\$ virtctl console vm-b[^\n]*", r"----- DIRECTION: vm-b[^\n]*"],
+        },
     ]
-    for pattern, label, src, dst, target_ip, method in markers:
-        m = re.search(pattern, ping)
-        if not m:
-            continue
-        start = m.start()
-        nxt = len(ping)
-        for other, *_ in markers:
-            if other == pattern:
-                continue
-            om = re.search(other, ping[m.end() :])
-            if om:
-                nxt = min(nxt, m.end() + om.start())
+
+    # Find the first matching marker for each logical direction.
+    found = []
+    for spec in specs:
+        match = None
+        for pat in spec["starts"]:
+            m = re.search(pat, ping)
+            if m and (match is None or m.start() < match.start()):
+                match = m
+        if match:
+            found.append((match.start(), match.end(), spec))
+
+    found.sort(key=lambda x: x[0])
+    for idx, (start, _end, spec) in enumerate(found):
+        nxt = found[idx + 1][0] if idx + 1 < len(found) else len(ping)
         block = ping[start:nxt].strip()
-        loss = "0% packet loss" in block
-        ttl = "ttl=64" in block
         directions.append(
             {
-                "id": label.replace(" ", "-").replace("→", "to"),
-                "label": label,
-                "source": src,
-                "target": dst,
-                "targetIp": target_ip,
-                "method": method,
-                "pass": loss,
-                "ttl64": ttl,
+                "id": spec["label"].replace(" ", "-").replace("→", "to"),
+                "label": spec["label"],
+                "source": spec["source"],
+                "target": spec["target"],
+                "targetIp": spec["targetIp"],
+                "method": spec["method"],
+                "pass": "0% packet loss" in block,
+                "ttl64": "ttl=64" in block,
                 "text": block,
             }
         )
@@ -46,7 +75,7 @@ def parse_ping_directions(ping):
 
 
 REPO_URL = "https://github.com/Aditya-Sarna/opi-assignment-2-ovs"
-CI_WORKFLOW_URL = f"{REPO_URL}/actions/workflows/capture.yml"
+CI_RUN_URL = "https://github.com/Aditya-Sarna/opi-assignment-2-ovs/actions/runs/28830867232"
 ASSIGNMENT_REPO_URL = "https://github.com/sknrao/opi-assignment-2-2026"
 
 
@@ -137,11 +166,10 @@ def main():
         },
         "links": {
             "repo": REPO_URL,
-            "ci": CI_WORKFLOW_URL,
+            "ci": CI_RUN_URL,
             "diagram": "https://raw.githubusercontent.com/Aditya-Sarna/opi-assignment-2-ovs/main/diagrams/implemented_software_datapath_topology.png",
             "submit": f"{REPO_URL}/blob/main/SUBMIT.md",
             "assignment": ASSIGNMENT_REPO_URL,
-            "linksWorkflow": f"{REPO_URL}/blob/main/LINKS.md",
         },
         "topology": {
             "bridge": {"id": "br1", "label": "br1", "vlan": 100},

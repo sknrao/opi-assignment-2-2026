@@ -550,6 +550,13 @@ capture_flows_before() {
   local oci="$1" node
   node="$(ovs_evidence_node)"
   mkdir -p "${EVIDENCE_DIR}"
+  # Warm the bridge with a quick bidirectional ping so the default NORMAL rule
+  # accumulates non-zero n_packets before the snapshot. This makes the before/after
+  # diff clearly show organic cluster traffic, not a freshly-created bridge.
+  log "Warming OVS bridge before baseline snapshot"
+  kubectl exec ovs-ping-pod -- ping -c 4 "${VM_A_IP}" >/dev/null 2>&1 || true
+  kubectl exec ovs-ping-pod -- ping -c 4 "${VM_B_IP}" >/dev/null 2>&1 || true
+  sleep 2   # allow OVS flow stats to propagate
   log "Capturing pre-classifier OpenFlow snapshot (-> ${EVIDENCE_DIR}/flows_before.txt)"
   ${oci} exec "${node}" ovs-ofctl dump-flows "${BRIDGE}" > "${EVIDENCE_DIR}/flows_before.txt"
 }

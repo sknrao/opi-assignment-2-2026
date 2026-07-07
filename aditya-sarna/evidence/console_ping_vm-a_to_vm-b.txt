@@ -1,19 +1,22 @@
-spawn virtctl console vm-a --namespace default
+spawn /home/runner/.local/bin/virtctl console vm-a --namespace default
 
 Successfully connected to vm-a console. Press Ctrl+] or Ctrl+5 to exit console.
-
+
 login as 'cirros' user. default password: 'gocubsgo'. use 'sudo' for root.
+vm-a login: gocubsgo
+Password: 
+Login incorrect
 vm-a login: cirros
 Password: 
 $ ping -c 5 10.10.0.11
 PING 10.10.0.11 (10.10.0.11): 56 data bytes
-64 bytes from 10.10.0.11: seq=0 ttl=64 time=2.183 ms
-64 bytes from 10.10.0.11: seq=1 ttl=64 time=1.547 ms
-64 bytes from 10.10.0.11: seq=2 ttl=64 time=1.891 ms
-64 bytes from 10.10.0.11: seq=3 ttl=64 time=2.054 ms
-64 bytes from 10.10.0.11: seq=4 ttl=64 time=1.723 ms
+64 bytes from 10.10.0.11: seq=0 ttl=64 time=0.817 ms
+64 bytes from 10.10.0.11: seq=1 ttl=64 time=0.308 ms
+64 bytes from 10.10.0.11: seq=2 ttl=64 time=0.327 ms
+64 bytes from 10.10.0.11: seq=3 ttl=64 time=0.346 ms
+64 bytes from 10.10.0.11: seq=4 ttl=64 time=0.334 ms
 
 --- 10.10.0.11 ping statistics ---
 5 packets transmitted, 5 packets received, 0% packet loss
-round-trip min/avg/max = 1.547/1.879/2.183 ms
-$ 
+round-trip min/avg/max = 0.308/0.426/0.817 ms
+$ 

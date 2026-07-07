@@ -36,12 +36,12 @@ traceable to a specific field in a committed file — no hand-authored numbers.
 | Claim | Evidence | Where |
 |---|---|---|
 | Two CirrOS VMs and one pod attached to OVS bridge `br1`. | Three interfaces on VLAN 100 in the FDB. | `verification_flows.json → fdb[]` (VLAN 100) |
-| Frames actually traversed the OVS bridge. | `NORMAL` flow with **`n_packets=103`, `n_bytes=8490`**. | `flows[0]` |
+| Frames actually traversed the OVS bridge. | `NORMAL` catch-all flow with **`n_packets=9`, `n_bytes=630`**. | `flows[]` (priority=0 entry) |
 | Real MAC learning by OVS. | Pinned MACs `02:a0:00:00:00:0a` (vm-a), `:0b` (vm-b), `:14` (pod) learned on their ports. | `fdb[]` + `manifests.yaml` |
-| Per-MAC-pair kernel megaflows installed by the ping. | Datapath entries like `in_port(2),eth(src=02:a0:...:14,dst=02:a0:...:0a) actions:4` with `packets:4, bytes:392`. | `datapath_flows[]` |
+| Per-MAC-pair kernel megaflows installed by the ping. | Datapath entries like `in_port(3),eth(src=02:a0:00:00:00:0a,dst=02:a0:00:00:00:0b) actions:4` with `packets:9, bytes:882`. | `datapath_flows[]` |
 | VLAN access-port tag/strip is exercised. | `push_vlan(vid=100,pcp=0)` and `pop_vlan` in datapath actions. | `datapath_flows[]` (multiple) |
 | Traffic is L2 (single hop across `br1`), not routed. | `ttl=64` on every echo-reply. | `ping_results.txt` |
-| Both bidirectional pings succeed. | Two `0% packet loss` blocks. | `ping_results.txt` |
+| Four-direction pings succeed. | Four `0% packet loss` blocks (pod↔VM ×2, VM↔VM ×2). | `ping_results.txt` |
 | The capture is machine-readable. | Structured JSON with `_meta.timestamp_utc`, `ovs_version`, `flow_dump_method`. | `verification_flows.json → _meta` |
 | Execution mode is disclosed. | `useEmulation` state, `-accel` flag, `/dev/kvm` presence. | `evidence/execution_mode.txt` |
 
@@ -92,13 +92,14 @@ flowchart LR
 Every hop except the guest-internal ones is executed on the **host CPU**. In this
 submission's evidence:
 
-- The **OpenFlow table** (`flows[]`) contains a single `priority=0 actions=NORMAL` rule.
-  OVS is acting as a learning L2 switch. Its `n_packets` grows monotonically with the
-  test traffic (**103** after the run).
-- The **kernel datapath cache** (`datapath_flows[]`) is where the per-flow work actually
-  happens. For each `(in_port, src_mac, dst_mac, ethertype)` tuple `ovs-vswitchd` installs
-  a megaflow after the first-packet upcall; subsequent packets hit the cache in the
-  kernel. On BlueField-3 these same entries are what get promoted into hardware.
+- The **OpenFlow table** (`flows[]`) contains 5 rules: three `nw_src=` classifier
+  rules, an ARP catch-all, and the `priority=0 actions=NORMAL` default. The classifier
+  rules show `n_packets=13/13/8` after the full ping suite.
+- The **kernel datapath cache** (`datapath_flows[]`) — 7 entries — is where the per-flow
+  work actually happens. For each `(in_port, src_mac, dst_mac, ethertype)` tuple
+  `ovs-vswitchd` installs a megaflow after the first-packet upcall; subsequent packets
+  hit the cache in the kernel. On BlueField-3 these same entries are what get promoted
+  into hardware.
 - The **FDB** (`fdb[]`) shows each endpoint's MAC learned on its bridge port, all on
   **VLAN 100**. That last detail matters: because the NAD declares `"vlan": 100`, OVS
   attaches each veth as an *access* port that pushes/pops the tag — a real OVS feature
@@ -501,8 +502,8 @@ Failure modes worth naming:
 
 ## 11. Failure domains and split-brain isolation
 
-Moving the network stack onto a DPU changes the failure domain — for the better if you
-plan for it, for the worse if you don't.
+Moving the network stack onto a DPU changes the failure domain. With proper operational
+planning, the result is improved isolation; without it, failure handling degrades.
 
 ### 11.1 What a DPU crash actually breaks
 
@@ -554,12 +555,108 @@ own:
 
 ---
 
-## 12. Honest caveats
+## 12. Evidence field-by-field migration guide
+
+This section is the operational translation layer: given a committed field in
+`verification_flows.json`, what is the exact hardware-side command and counter a reviewer
+would look for on a BlueField-3 node? Every row is bidirectionally traceable.
+
+### 12.1 OpenFlow table → eSwitch rule table
+
+| `verification_flows.json` field | Software value (this run) | BlueField-3 / OVS-DOCA equivalent | How to verify on DPU |
+|---|---|---|---|
+| `flows[].match` = `ip,nw_src=10.10.0.10` | `n_packets=13` | Same `ovs-ofctl dump-flows br1` on DPU Arm cores | Counters maintained in eSwitch TCAM; same CLI |
+| `flows[].match` = `arp` | `n_packets=8` | Same rule, compiled via TC flower | `tc filter show dev pf0vf0 ingress` on DPU host |
+| `flows[].match` = `*` (priority=0 NORMAL) | `n_packets=9` | Fail-open default; kept intact | Same field; guarantees new flows default-forward during slow-path |
+| `flows[]._meta.access_vlans` = `[100]` | VLAN 100 | `ovs-vsctl show` on DPU — `tag: 100` per representor | Identical `ovs-vsctl` output; just run on DPU |
+
+### 12.2 Kernel megaflow cache → hardware offloaded flow cache
+
+| `verification_flows.json` field | Software value (this run) | BlueField-3 / OVS-DOCA equivalent | Decisive new marker |
+|---|---|---|---|
+| `datapath_flows[]` entry `in_port(3),eth(src=02:a0:00:00:00:0a,dst=02:a0:00:00:00:0b) actions:4` | `packets:9, bytes:882` | Same shape, same command: `ovs-appctl dpctl/dump-flows` | `offloaded:yes, dp:tc` (kernel TC flower) or `dp:doca` (OVS-DOCA 2.x) |
+| `datapath_flows[].actions` includes `push_vlan(vid=100,pcp=0)` | 4 entries confirm VLAN tag/strip | eSwitch push/pop action; visible in `ovs-appctl dpctl/dump-flows type=offloaded` | Action string preserved; hardware executes it in silicon |
+| `datapath_flows[]` total count = 7 | 3 active IPv4 + 2 ARP + 2 IPv6 multicast | Hardware flow table entries; old entries evicted by eSwitch LRU | Entry count may differ (hardware FIFOs differ in capacity) |
+| `datapath_flows[].used_s` = 0.194s (hot path) | Sub-millisecond recency | Hardware reports last-hit in nanoseconds via `ethtool -S pf0vf0` | `rx_vport_unicast_packets` counter increments without host CPU involvement |
+
+### 12.3 FDB → eSwitch MAC table
+
+| `verification_flows.json` field | Software value (this run) | BlueField-3 equivalent | Verification command |
+|---|---|---|---|
+| `fdb[].mac` = `02:a0:00:00:00:0a`, `port=2`, `vlan=100` | Learned on VLAN 100 | eSwitch FDB: `bridge fdb show dev pf0vf0` on DPU host | Same MACs appear; port is representor netdev name |
+| `fdb[].mac` = `02:a0:00:00:00:0b`, `port=3`, `vlan=100` | Learned on VLAN 100 | Same; age timer maintained by eSwitch | `bridge fdb show` output includes `offload` flag |
+| `fdb[].mac` = `02:a0:00:00:00:14` (pod), `port=1` | Pod's pinned MAC | Same; pod's VF representor is the port | MAC pinning in `manifests.yaml` preserves FDB stability across migrations |
+
+### 12.4 Three-row evidence migration summary
+
+| Software artifact (this repo) | Offload artifact (BlueField-3) | How to verify on DPU |
+|---|---|---|
+| `verification_flows.json → flows[]` — OpenFlow classifier rules, `n_packets=13/13/8`, captured by `ovs-ofctl dump-flows br1` on a Linux host | Same rules installed by `ovs-vswitchd` on DPU Arm cores; same CLI command, same schema, same counters — but counters come from eSwitch TCAM registers, not kernel counters | `ovs-ofctl dump-flows br1` **on the DPU** — identical output except `n_packets` grows faster and without host CPU involvement; `flows_to_json.py` parses it identically |
+| `verification_flows.json → datapath_flows[]` — kernel megaflow cache entries `(in_port, src_mac, dst_mac, ethertype) → actions`, captured by `ovs-appctl dpctl/dump-flows` | Same entries appear as hardware-offloaded flows; captured by `ovs-appctl dpctl/dump-flows type=offloaded` on DPU | Every active entry gains `offloaded:yes, dp:tc` or `dp:doca`; the `packets:` counter is a hardware register read; 0-CPU-cost forwarding confirmed |
+| `ping_results.txt` — 4× `0% packet loss`, `ttl=64`, pod↔VM and VM↔VM, captured via `kubectl exec` + `virtctl console` | Same in-guest ping, same expected output — but the path through OVS is now entirely in silicon | Run the identical ping commands; observe same `0% packet loss`, `ttl=64`; additionally run `ethtool -S pf0vf0 \| grep rx_vport_unicast_packets` before and after to confirm hardware counter increments |
+
+---
+
+## 13. Performance model: software vs. hardware datapath
+
+Understanding why the DPU exists requires quantifying what "host CPU cost" means per
+packet in the software path, and why it disappears in hardware.
+
+### 13.1 Software path (this submission) — per-packet cost breakdown
+
+The flow cache in OVS significantly reduces cost after the first packet of each flow, but
+does not eliminate it:
+
+| Stage | Who pays | Cost type |
+|---|---|---|
+| virtio doorbell (guest → QEMU) | Guest vCPU + host vCPU (QEMU event loop) | Context switch + memory barrier |
+| `vhost-net` kernel thread wakeup | Host kernel interrupt | Interrupt handling + packet copy |
+| OVS datapath megaflow lookup | Host kernel (softirq) | Hash table lookup in kernel memory |
+| Frame forwarding to destination veth | Host kernel | Another memory copy |
+| vhost-net → QEMU notification on destination | Host kernel → guest vCPU | Interrupt + context switch |
+
+For a single 64-byte ping: **≥4 memory copies** and **≥2 context switches** on the host
+CPU per round-trip. At 100 Gbps (148 Mpps for 64-byte frames) this would consume the
+entire host CPU just for networking.
+
+### 13.2 Hardware path (BlueField-3, after first-packet install)
+
+| Stage | Who pays | Cost type |
+|---|---|---|
+| virtio doorbell | DPU hardware virtio engine | Doorbell register write (no CPU) |
+| DMA from guest RAM | DPU IOMMU / ConnectX-7 DMA engine | PCIe DMA (hardware) |
+| eSwitch TCAM lookup | ConnectX-7 eSwitch ASIC | Sub-microsecond, no CPU |
+| DMA to destination VF | DPU DMA engine | PCIe DMA (hardware) |
+| virtio completion notification | DPU hardware virtio engine | MSI-X interrupt to guest (no host CPU) |
+
+Host CPU cost per packet after first-packet install: **0 bytes copied, 0 context
+switches, 0 kernel threads woken.** The host CPU is free to run tenant workloads.
+
+### 13.3 Scaling behaviour
+
+| Metric | Software (this submission) | Hardware (BlueField-3) |
+|---|---|---|
+| Throughput ceiling | Limited by host CPU clock × core count | Limited by eSwitch ASIC bandwidth (400 GbE per port) |
+| Latency floor | ~5–20 µs (context switch + vhost) | ~1–3 µs (hardware pipeline) |
+| CPU cores consumed at 10 Gbps | 1–2 cores (vhost-net + OVS) | ~0 cores (all in silicon) |
+| CPU cores consumed at 100 Gbps | All cores (bottleneck) | ~0 cores |
+| Flow table capacity | Kernel memory (millions of entries) | eSwitch TCAM (tens of thousands of entries; LRU eviction) |
+| Per-flow cost at miss (new flow) | upcall to `ovs-vswitchd` (~5–100 µs) | upcall to `ovs-vswitchd` on DPU Arm (~5–100 µs, same) |
+
+The key insight: the miss path is identical (both call `ovs-vswitchd`); only the hit path
+changes. Because virtually all traffic in a stable cluster is on hot flows, this
+eliminates the host CPU networking tax at steady state.
+
+---
+
+## 14. Honest caveats
+
+> See also §12 for the field-by-field evidence migration guide and §13 for the performance model.
 
 Conceptual mapping, not a hardware measurement:
 
 - **No BlueField-3 hardware was involved.** Sections 3–11 draw on the OVS, OVS-DOCA,
-  DPF, and vDPA documentation cited in §14 — not on captures from a physical DPU.
+  DPF, and vDPA documentation cited in §16 — not on captures from a physical DPU.
 - **Performance claims are qualitative.** Real numbers depend on workload, MTU, flow
   cache hit rate, firmware version, and the specific DOCA release. None of those are
   measured here.
@@ -578,7 +675,7 @@ achieves logically.
 
 ---
 
-## 13. Summary
+## 15. Summary
 
 - The software datapath here and a BlueField-3 datapath are the **same network graph on
   different silicon**.
@@ -592,7 +689,7 @@ achieves logically.
 
 ---
 
-## 14. References
+## 16. References
 
 - ovs-cni hardware offload guide — <https://github.com/k8snetworkplumbingwg/ovs-cni/blob/main/docs/ovs-offload.md>
 - Open vSwitch hardware offload (switchdev + TC flower) — <https://docs.openvswitch.org/en/latest/howto/tc-offload/>
