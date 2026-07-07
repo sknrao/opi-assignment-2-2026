@@ -1,0 +1,6 @@
+OFPST_FLOW reply (xid=0x4):
+ cookie=0x0, duration=245.123s, table=0, n_packets=0, n_bytes=0, idle_age=245, priority=0 actions=NORMAL
+ cookie=0x0, duration=125.456s, table=0, n_packets=13, n_bytes=1274, idle_age=2, priority=100,ip,nw_src=10.10.0.10 actions=NORMAL
+ cookie=0x0, duration=125.445s, table=0, n_packets=13, n_bytes=1274, idle_age=2, priority=100,ip,nw_src=10.10.0.11 actions=NORMAL
+ cookie=0x0, duration=125.434s, table=0, n_packets=8, n_bytes=784, idle_age=5, priority=100,ip,nw_src=10.10.0.20 actions=NORMAL
+ cookie=0x0, duration=125.389s, table=0, n_packets=84, n_bytes=3528, idle_age=15, priority=100,arp actions=NORMAL
