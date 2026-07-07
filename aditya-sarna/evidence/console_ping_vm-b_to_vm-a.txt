@@ -1,0 +1,19 @@
+spawn virtctl console vm-b --namespace default
+
+Successfully connected to vm-b console. Press Ctrl+] or Ctrl+5 to exit console.
+
+login as 'cirros' user. default password: 'gocubsgo'. use 'sudo' for root.
+vm-b login: cirros
+Password: 
+$ ping -c 5 10.10.0.10
+PING 10.10.0.10 (10.10.0.10): 56 data bytes
+64 bytes from 10.10.0.10: seq=0 ttl=64 time=1.934 ms
+64 bytes from 10.10.0.10: seq=1 ttl=64 time=1.682 ms
+64 bytes from 10.10.0.10: seq=2 ttl=64 time=2.011 ms
+64 bytes from 10.10.0.10: seq=3 ttl=64 time=1.758 ms
+64 bytes from 10.10.0.10: seq=4 ttl=64 time=1.621 ms
+
+--- 10.10.0.10 ping statistics ---
+5 packets transmitted, 5 packets received, 0% packet loss
+round-trip min/avg/max = 1.621/1.801/2.011 ms
+$ 

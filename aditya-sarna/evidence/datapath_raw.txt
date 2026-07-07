@@ -1,0 +1,7 @@
+recirc_id(0),in_port(3),eth(src=02:a0:00:00:00:0a,dst=02:a0:00:00:00:0b),eth_type(0x0800),ipv4(src=10.10.0.10,frag=no), packets:9, bytes:882, used:0.192s, actions:4
+recirc_id(0),in_port(3),eth(src=02:a0:00:00:00:0a,dst=02:a0:00:00:00:0b),eth_type(0x0806), packets:0, bytes:0, used:never, actions:4
+recirc_id(0),in_port(4),eth(src=f2:0e:bc:6d:5b:15,dst=33:33:00:00:00:02),eth_type(0x86dd),ipv6(frag=no),key32(00 00/00 00), packets:0, bytes:0, used:never, actions:push_vlan(vid=100,pcp=0),1,pop_vlan,2,3
+recirc_id(0),in_port(4),eth(src=66:a7:cd:a1:b9:77,dst=33:33:00:00:00:02),eth_type(0x86dd),ipv6(frag=no),key32(00 00/00 00), packets:0, bytes:0, used:never, actions:push_vlan(vid=100,pcp=0),1,pop_vlan,2,3
+recirc_id(0),in_port(4),eth(src=02:a0:00:00:00:0b,dst=02:a0:00:00:00:0a),eth_type(0x0800),ipv4(src=10.10.0.11,frag=no), packets:9, bytes:882, used:0.193s, actions:3
+recirc_id(0),in_port(3),eth(src=56:36:42:46:7c:bf,dst=33:33:00:00:00:02),eth_type(0x86dd),ipv6(frag=no),key32(00 00/00 00), packets:1, bytes:70, used:7.847s, actions:push_vlan(vid=100,pcp=0),1,pop_vlan,2,4
+recirc_id(0),in_port(4),eth(src=02:a0:00:00:00:0b,dst=02:a0:00:00:00:0a),eth_type(0x0806), packets:1, bytes:42, used:6.278s, actions:3

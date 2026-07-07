@@ -1,0 +1,43 @@
+$ kubectl exec ovs-ping-pod -- ping -c 4 10.10.0.10
+PING 10.10.0.10 (10.10.0.10): 56 data bytes
+64 bytes from 10.10.0.10: seq=0 ttl=64 time=0.559 ms
+64 bytes from 10.10.0.10: seq=1 ttl=64 time=0.159 ms
+64 bytes from 10.10.0.10: seq=2 ttl=64 time=0.193 ms
+64 bytes from 10.10.0.10: seq=3 ttl=64 time=0.197 ms
+
+--- 10.10.0.10 ping statistics ---
+4 packets transmitted, 4 packets received, 0% packet loss
+round-trip min/avg/max = 0.159/0.277/0.559 ms
+
+$ kubectl exec ovs-ping-pod -- ping -c 4 10.10.0.11
+PING 10.10.0.11 (10.10.0.11): 56 data bytes
+64 bytes from 10.10.0.11: seq=0 ttl=64 time=0.796 ms
+64 bytes from 10.10.0.11: seq=1 ttl=64 time=0.256 ms
+64 bytes from 10.10.0.11: seq=2 ttl=64 time=0.258 ms
+64 bytes from 10.10.0.11: seq=3 ttl=64 time=0.279 ms
+
+--- 10.10.0.11 ping statistics ---
+4 packets transmitted, 4 packets received, 0% packet loss
+round-trip min/avg/max = 0.256/0.397/0.796 ms
+
+$ virtctl console vm-a   # login, then: ping -c 5 10.10.0.11  (VM->VM across br1)
+PING 10.10.0.11 (10.10.0.11): 56 data bytes
+64 bytes from 10.10.0.11: seq=0 ttl=64 time=0.897 ms
+64 bytes from 10.10.0.11: seq=1 ttl=64 time=0.317 ms
+64 bytes from 10.10.0.11: seq=2 ttl=64 time=0.258 ms
+64 bytes from 10.10.0.11: seq=3 ttl=64 time=0.335 ms
+64 bytes from 10.10.0.11: seq=4 ttl=64 time=0.346 ms
+
+--- 10.10.0.11 ping statistics ---
+5 packets transmitted, 5 packets received, 0% packet loss
+
+$ virtctl console vm-b   # login, then: ping -c 5 10.10.0.10  (VM->VM across br1)
+PING 10.10.0.10 (10.10.0.10): 56 data bytes
+64 bytes from 10.10.0.10: seq=0 ttl=64 time=0.599 ms
+64 bytes from 10.10.0.10: seq=1 ttl=64 time=0.343 ms
+64 bytes from 10.10.0.10: seq=2 ttl=64 time=0.308 ms
+64 bytes from 10.10.0.10: seq=3 ttl=64 time=0.415 ms
+64 bytes from 10.10.0.10: seq=4 ttl=64 time=0.432 ms
+
+--- 10.10.0.10 ping statistics ---
+5 packets transmitted, 5 packets received, 0% packet loss

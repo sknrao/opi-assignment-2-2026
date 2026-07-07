@@ -1,0 +1,16 @@
+5981772b-e2e2-4e1a-80ee-23a0f5e81eb7
+    Bridge br1
+        fail_mode: standalone
+        Port veth69d1e9ff
+            tag: 100
+            Interface veth69d1e9ff
+        Port veth6180ac61
+            tag: 100
+            Interface veth6180ac61
+        Port veth41bac055
+            tag: 100
+            Interface veth41bac055
+        Port br1
+            Interface br1
+                type: internal
+    ovs_version: "3.5.0"

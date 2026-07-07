@@ -1,0 +1,107 @@
+name: Capture OVS Evidence
+
+# Produces REAL ping_results.txt and verification_flows.json on GitHub's Linux runner.
+# No Multipass needed. Push this repo to GitHub → Actions → Run workflow → download artifacts.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master, assignment-2]
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    env:
+      VMI_WAIT_TIMEOUT: "1800"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show disk
+        run: df -h && docker system df || true
+
+      - name: Free disk space on runner
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: true
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+
+      - name: Cache KubeVirt image archive
+        uses: actions/cache@v4
+        with:
+          path: /tmp/kubevirt-images.tar
+          key: kubevirt-images-v1.8.4-${{ hashFiles('cluster_setup.sh') }}
+
+      - name: Show disk after cleanup
+        run: df -h && docker system df || true
+
+      - name: Enable KVM on runner
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm trigger --name-match=kvm
+          ls -la /dev/kvm && echo "KVM available" || echo "WARNING: no /dev/kvm on this runner"
+
+      - name: Install expect (for VM↔VM console pings)
+        run: sudo apt-get update -qq && sudo apt-get install -y expect
+
+      - name: Run cluster_setup.sh
+        run: |
+          chmod +x cluster_setup.sh verify_datapath.sh flows_to_json.py
+          ./cluster_setup.sh
+
+      - name: Verify artifacts
+        run: |
+          test -f ping_results.txt
+          test -f verification_flows.json
+          test -d evidence
+          test -f evidence/flows_raw.txt
+          test -f evidence/flows_after.txt
+          test -f evidence/flows_before.txt
+          test -f evidence/execution_mode.txt
+          cmp -s evidence/flows_raw.txt evidence/flows_after.txt
+          n=$(grep -c '0% packet loss' ping_results.txt); echo "ping 0%-loss blocks: $n"; [ "$n" -ge 4 ]
+          python3 -c "import json; d=json.load(open('verification_flows.json')); assert d['flows'] and d['fdb']"
+          # Assert classifier rules fired (nw_src= rules must have n_packets > 0).
+          # Shell-only to avoid YAML/Python indentation conflicts.
+          for ip in 10.10.0.10 10.10.0.11 10.10.0.20; do
+            n=$(grep "nw_src=${ip}" evidence/flows_raw.txt | grep -oE 'n_packets=[0-9]+' | cut -d= -f2 | head -1)
+            [ "${n:-0}" -gt 0 ] || { echo "ERROR: nw_src=${ip} has n_packets=${n:-0}"; exit 1; }
+            echo "  nw_src=${ip} -> n_packets=${n}"
+          done
+          echo "classifier rules OK"
+          # Raw text must round-trip to the same JSON shape as verification_flows.json.
+          python3 flows_to_json.py --bundle evidence --bridge br1 > /tmp/roundtrip.json
+          python3 -c "import json; a=json.load(open('verification_flows.json')); b=json.load(open('/tmp/roundtrip.json')); \
+            assert len(a['flows'])==len(b['flows']), 'flows mismatch'; \
+            assert len(a['datapath_flows'])==len(b['datapath_flows']), 'datapath mismatch'; \
+            assert len(a['fdb'])==len(b['fdb']), 'fdb mismatch'; \
+            assert len(a['ports'])==len(b['ports']), 'ports mismatch'; \
+            print('round-trip OK:', len(a['flows']), 'flows,', len(a['datapath_flows']), 'datapath,', len(a['fdb']), 'fdb')"
+          # Flow-hit summary — single-line python3 -c to stay within YAML block scalar.
+          echo "=== flow-hit summary ==="
+          python3 -c "import json; d=json.load(open('verification_flows.json')); [print(f'  {f[\"match\"]:<30s}  n_packets={f[\"n_packets\"]}') for f in d['flows'] if 'nw_src' in f.get('match','') or 'arp' in f.get('match','')]; print(f'  datapath_flows={len(d[\"datapath_flows\"])}  fdb={len(d[\"fdb\"])}')"
+
+      - name: Show KVM proof
+        run: |
+          echo "=== kvm_proof.txt ==="
+          cat evidence/kvm_proof.txt || true
+          echo "=== execution_mode.txt ==="
+          cat evidence/execution_mode.txt || true
+
+      - name: Upload evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: ovs-evidence
+          path: |
+            ping_results.txt
+            verification_flows.json
+            evidence/

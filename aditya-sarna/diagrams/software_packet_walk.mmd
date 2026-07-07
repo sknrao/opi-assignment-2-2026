@@ -1,0 +1,9 @@
+flowchart LR
+    APP["Guest ping app"] --> VIO["virtio-net"]
+    VIO --> QEMU["QEMU / vhost-net"]
+    QEMU --> TAP["tap0 virt-launcher"]
+    TAP --> BR["in-pod bridge"]
+    BR --> VETH["veth OVS-CNI"]
+    VETH --> OVS["OVS br1\nOpenFlow + megaflow\nVLAN 100"]
+    OVS --> PEER["veth peer"]
+    PEER --> NET1["pod net1\n10.10.0.20"]

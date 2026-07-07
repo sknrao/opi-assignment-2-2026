@@ -1,0 +1,14 @@
+flowchart TB
+    subgraph kind["KinD node (kindnet default CNI)"]
+        subgraph br1["OVS br1 — VLAN 100 access ports"]
+            VMA["vm-a\n10.10.0.10\n02:a0:00:00:00:0a"]
+            VMB["vm-b\n10.10.0.11\n02:a0:00:00:00:0b"]
+            POD["ovs-ping-pod\n10.10.0.20\n02:a0:00:00:00:14"]
+        end
+        NAD["Multus NAD\nbridge: br1, vlan: 100"]
+        OVSCNI["OVS-CNI DaemonSet\nveth → br1"]
+    end
+    NAD --> OVSCNI
+    OVSCNI --> VMA
+    OVSCNI --> VMB
+    OVSCNI --> POD
