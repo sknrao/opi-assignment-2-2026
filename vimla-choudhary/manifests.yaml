@@ -1,0 +1,61 @@
+---
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: ovs-net
+  namespace: default
+spec:
+  config: '{ "cniVersion": "0.4.0", "type": "ovs", "bridge": "br0" }'
+
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: cirros-vm
+  namespace: default
+spec:
+  running: true
+  template:
+    metadata:
+      labels:
+        kubevirt.io/vm: cirros-vm
+    spec:
+      domain:
+        devices:
+          disks:
+            - disk:
+                bus: virtio
+              name: containerdisk
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+          interfaces:
+            - masquerade: {}
+              name: default
+            - bridge: {}
+              name: ovs-net
+        resources:
+          requests:
+            memory: 128Mi
+      networks:
+        - name: default
+          pod: {}
+        - multus:
+            networkName: ovs-net
+          name: ovs-net
+      volumes:
+        - containerDisk:
+            image: kubevirt/cirros-container-disk-demo
+          name: containerdisk
+        - cloudInitNoCloud:
+            networkData: |
+              version: 2
+              ethernets:
+                eth1:
+                  addresses:
+                    - 10.10.10.10/24
+            userData: |
+              #cloud-config
+              password: gocubsgo
+              chpasswd: { expire: False }
+          name: cloudinitdisk
