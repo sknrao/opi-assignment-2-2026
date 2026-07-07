@@ -20,7 +20,6 @@
 #
 # Usage:
 #   ./cluster_setup.sh              # full bootstrap + verification
-#   ./cluster_setup.sh --help       # list env vars and exit codes
 #   CLEANUP=1 ./cluster_setup.sh    # tear the cluster down and exit
 #
 # A note on the flow dump format: 'ovs-ofctl dump-flows <br> --format=json' is
@@ -30,7 +29,7 @@
 # it converts the raw dump into an equivalent, fully machine-readable JSON
 # document (schema documented in README.md).
 #
-set -Eeuo pipefail
+set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CLUSTER_NAME="${CLUSTER_NAME:-ovs-kubevirt}"
@@ -51,79 +50,9 @@ FLOW_DUMP="${FLOW_DUMP:-${SCRIPT_DIR}/verification_flows.json}"
 # consistent by construction.
 EVIDENCE_DIR="${EVIDENCE_DIR:-${SCRIPT_DIR}/evidence}"
 PARSER="${PARSER:-${SCRIPT_DIR}/flows_to_json.py}"
-STEP_TOTAL=12
-STEP_N=0
 
-log()  { printf '\n\033[1;34m==>\033[0m %s\n' "$*"; }
-warn() { printf '\033[1;33m[WARN]\033[0m %s\n' "$*" >&2; }
-die()  { printf '\n\033[1;31mERROR:\033[0m %s\n' "$*" >&2; exit 1; }
-
-step() {
-  STEP_N=$((STEP_N + 1))
-  printf '\n\033[1;36m==> [%d/%d]\033[0m %s\n' "${STEP_N}" "${STEP_TOTAL}" "$*"
-}
-
-retry() {
-  local n="$1" sleep_s="$2" desc="$3"
-  shift 3
-  [[ "${1:-}" == "--" ]] && shift
-  local i
-  for ((i = 1; i <= n; i++)); do
-    if "$@"; then return 0; fi
-    warn "${desc}: attempt ${i}/${n} failed; retrying in ${sleep_s}s..."
-    sleep "${sleep_s}"
-  done
-  die "${desc}: all ${n} attempts failed."
-}
-
-show_help() {
-  cat <<EOF
-cluster_setup.sh — KinD + OVS + Multus + OVS-CNI + KubeVirt + datapath verification
-
-Usage:
-  ./cluster_setup.sh                 Full bootstrap + verification
-  ./cluster_setup.sh --help          Show this help
-  CLEANUP=1 ./cluster_setup.sh       Delete cluster '${CLUSTER_NAME}' and exit
-
-Exit codes:
-  0   Bootstrap and verification succeeded (artifacts regenerated)
-  1   Bootstrap or verification failed (cluster left up for inspection)
-
-Environment (all optional):
-  CLUSTER_NAME=${CLUSTER_NAME}
-  KIND_VERSION=${KIND_VERSION}
-  KIND_NODE_TAG=${KIND_NODE_TAG}
-  BRIDGE=${BRIDGE}
-  MULTUS_VERSION=${MULTUS_VERSION}
-  MANIFESTS=${MANIFESTS}
-  PING_RESULTS=${PING_RESULTS}
-  FLOW_DUMP=${FLOW_DUMP}
-  EVIDENCE_DIR=${EVIDENCE_DIR}
-  PARSER=${PARSER}
-  VMI_WAIT_TIMEOUT=${VMI_WAIT_TIMEOUT:-600}
-  CLEANUP=1                          Tear down instead of bootstrap
-
-Artifacts:
-  ping_results.txt, verification_flows.json, evidence/* (raw OVS dumps)
-
-On failure the cluster is kept running. Inspect with:
-  kubectl get pods -A
-  kind export logs --name ${CLUSTER_NAME} /tmp/kind-logs
-Teardown: CLEANUP=1 ./cluster_setup.sh
-EOF
-}
-
-cleanup_on_exit() {
-  local code=$?
-  [[ "${code}" -eq 0 || "${CLEANUP:-0}" == "1" ]] && return 0
-  warn "Script exited with code ${code}."
-  warn "Cluster '${CLUSTER_NAME}' was left running for inspection."
-  warn "  kubectl get pods -A"
-  warn "  kind export logs --name ${CLUSTER_NAME} /tmp/kind-logs"
-  warn "Teardown: CLEANUP=1 ${SCRIPT_DIR}/cluster_setup.sh"
-}
-
-trap cleanup_on_exit EXIT
+log() { printf '\n\033[1;34m==>\033[0m %s\n' "$*"; }
+die() { printf '\n\033[1;31mERROR:\033[0m %s\n' "$*" >&2; exit 1; }
 
 # ---------------------------------------------------------------------------
 # Prerequisites
@@ -180,27 +109,12 @@ preflight_disk() {
     avail_gb="$(df -g "${path}" | awk 'NR==2 {print $4}')"
   fi
   if [[ -z "${avail_gb}" || ! "${avail_gb}" =~ ^[0-9]+$ ]]; then
-    warn "Could not parse host free disk; continuing (Docker Desktop manages its own disk pool)"
+    log "Could not parse host free disk; continuing (Docker Desktop manages its own disk pool)"
     return 0
   fi
   log "Free space (host): ~${avail_gb} GB"
   if [[ "${avail_gb}" -lt 8 ]]; then
     die "Need at least 8 GB free on host. On Mac use Docker Desktop (64 GB disk), or GitHub Actions / Oracle Cloud (see RUN.md)."
-  fi
-}
-
-preflight_inotify() {
-  [[ "$(uname -s)" != "Linux" ]] && return 0
-  local cur_watches cur_instances
-  cur_watches="$(cat /proc/sys/fs/inotify/max_user_watches 2>/dev/null || echo 0)"
-  cur_instances="$(cat /proc/sys/fs/inotify/max_user_instances 2>/dev/null || echo 0)"
-  if [[ "${cur_watches}" -lt 524288 || "${cur_instances}" -lt 512 ]]; then
-    warn "inotify limits may be low for KinD+KubeVirt (watches=${cur_watches}, instances=${cur_instances})."
-    warn "virt-handler can crash-loop with 'too many open files'. Raise with:"
-    warn "  sudo sysctl fs.inotify.max_user_watches=1048576"
-    warn "  sudo sysctl fs.inotify.max_user_instances=8192"
-  else
-    log "inotify limits OK (watches=${cur_watches}, instances=${cur_instances})"
   fi
 }
 
@@ -273,7 +187,7 @@ install_ovs_in_nodes() {
 
 wait_node_ready() {
   log "Waiting for the node to be Ready (kindnet default CNI)"
-  retry 3 10 "node Ready" -- kubectl wait --for=condition=Ready nodes --all --timeout=300s
+  kubectl wait --for=condition=Ready nodes --all --timeout=300s
   kubectl -n kube-system rollout status daemonset/kindnet --timeout=180s 2>/dev/null || true
 }
 
@@ -536,27 +450,27 @@ wait_for_guest_network() {
   die "Guests never became reachable on ${BRIDGE}; check 'kubectl get vmi' and virt-launcher logs"
 }
 
-# Install explicit per-source classifier rules on br1 so verification_flows.json
-# proves classification (rule matched by source IP) rather than only default-NORMAL
-# forwarding. The priority=0 NORMAL catch-all is retained so the bridge continues
-# to learn/forward everything else, keeping the FDB and datapath megaflow evidence
-# intact.
-ovs_evidence_node() {
-  kubectl get pod -l kubevirt.io/domain=vm-a -o jsonpath='{.items[0].spec.nodeName}' 2>/dev/null \
-    || kind_node
-}
-
+# Snapshot flows BEFORE classifier installation so reviewers can see a clean
+# pre-classifier baseline (default NORMAL rule only, n_packets typically 0 or
+# very small from ARP/keepalives). No warm-up traffic here on purpose.
 capture_flows_before() {
   local oci="$1" node
-  node="$(ovs_evidence_node)"
+  node="$(kubectl get pod -l kubevirt.io/domain=vm-a -o jsonpath='{.items[0].spec.nodeName}' 2>/dev/null || true)"
+  node="${node:-$(kind_node)}"
   mkdir -p "${EVIDENCE_DIR}"
   log "Capturing pre-classifier OpenFlow snapshot (-> ${EVIDENCE_DIR}/flows_before.txt)"
   ${oci} exec "${node}" ovs-ofctl dump-flows "${BRIDGE}" > "${EVIDENCE_DIR}/flows_before.txt"
 }
 
+# Install explicit per-source classifier rules on br1 so verification_flows.json
+# proves classification (rule matched by source IP) rather than only default-NORMAL
+# forwarding. The priority=0 NORMAL catch-all is retained so the bridge continues
+# to learn/forward everything else, keeping the FDB and datapath megaflow evidence
+# intact.
 install_classifier_flows() {
   local oci="$1" node
-  node="$(ovs_evidence_node)"
+  node="$(kubectl get pod -l kubevirt.io/domain=vm-a -o jsonpath='{.items[0].spec.nodeName}' 2>/dev/null || true)"
+  node="${node:-$(kind_node)}"
   log "Installing per-source classifier rules on ${BRIDGE} (node ${node})"
   ${oci} exec "${node}" ovs-ofctl del-flows "${BRIDGE}"
   ${oci} exec "${node}" ovs-ofctl add-flow  "${BRIDGE}" \
@@ -750,13 +664,19 @@ capture_ovs_evidence() {
   # Capture on the node actually hosting vm-a's launcher pod - that is where
   # the VM's frames provably traverse the bridge.
   local node
-  node="$(ovs_evidence_node)"
+  node="$(kubectl get pod -l kubevirt.io/domain=vm-a -o jsonpath='{.items[0].spec.nodeName}')"
   log "Capturing OVS evidence on node '${node}' (bridge ${BRIDGE})"
 
   mkdir -p "${EVIDENCE_DIR}"
   local tmp
   tmp="$(mktemp -d)"
 
+  # Probe for native JSON support first (see header note); fall back to text.
+  local method="parsed-from-text"
+  if ${oci} exec "${node}" ovs-ofctl dump-flows "${BRIDGE}" --format=json \
+       > "${tmp}/openflow.json" 2>/dev/null; then
+    method="ovs-ofctl-native-json"
+  fi
   ${oci} exec "${node}" ovs-ofctl dump-flows "${BRIDGE}"        > "${tmp}/openflow.txt"
   ${oci} exec "${node}" ovs-appctl dpctl/dump-flows             > "${tmp}/datapath.txt" || true
   ${oci} exec "${node}" ovs-appctl fdb/show "${BRIDGE}"         > "${tmp}/fdb.txt"      || true
@@ -766,10 +686,10 @@ capture_ovs_evidence() {
   local ovs_version
   ovs_version="$(${oci} exec "${node}" ovs-vsctl --version | head -1)"
 
-  # Also publish the raw dumps into evidence/ (first-class deliverables). JSON is
-  # produced by flows_to_json.py --bundle so text and JSON stay consistent.
+  # Also publish the raw dumps into evidence/ (first-class deliverables). The
+  # JSON below is then a deterministic projection of these text files.
   cp "${tmp}/openflow.txt" "${EVIDENCE_DIR}/flows_raw.txt"
-  cp "${EVIDENCE_DIR}/flows_raw.txt" "${EVIDENCE_DIR}/flows_after.txt"
+  cp "${tmp}/openflow.txt" "${EVIDENCE_DIR}/flows_after.txt"
   [[ -s "${tmp}/datapath.txt" ]] && cp "${tmp}/datapath.txt" "${EVIDENCE_DIR}/datapath_raw.txt" || true
   [[ -s "${tmp}/fdb.txt"      ]] && cp "${tmp}/fdb.txt"      "${EVIDENCE_DIR}/fdb.txt"          || true
   cp "${tmp}/ports.txt"    "${EVIDENCE_DIR}/ports.txt"
@@ -777,9 +697,102 @@ capture_ovs_evidence() {
 
   capture_execution_mode "${oci}" "${node}"
 
-  [[ -f "${PARSER}" ]] || die "missing parser: ${PARSER}"
-  python3 "${PARSER}" --bundle "${EVIDENCE_DIR}" --bridge "${BRIDGE}" \
-    --node "${node}" --ovs-version "${ovs_version}" > "${FLOW_DUMP}"
+  python3 - "${tmp}" "${FLOW_DUMP}" "${BRIDGE}" "${node}" "${ovs_version}" "${method}" <<'PYEOF'
+import json, re, sys, datetime
+
+tmp, out, bridge, node, ovs_version, method = sys.argv[1:7]
+
+def read(name):
+    try:
+        with open(f"{tmp}/{name}") as f:
+            return f.read()
+    except FileNotFoundError:
+        return ""
+
+flows = []
+for line in read("openflow.txt").splitlines():
+    line = line.strip()
+    if "actions=" not in line:
+        continue
+    fields = dict(re.findall(r"(\w+)=([^,\s]+)", line.split(" actions=")[0]))
+    match_part = line.split(" actions=")[0].split(",")[-1].strip()
+    flows.append({
+        "orig": line,
+        "cookie": fields.get("cookie"),
+        "table": int(fields.get("table", 0)),
+        "priority": int(fields.get("priority", 0)) if "priority" in fields else None,
+        "duration_s": float(fields.get("duration", "0").rstrip("s")),
+        "n_packets": int(fields.get("n_packets", 0)),
+        "n_bytes": int(fields.get("n_bytes", 0)),
+        "match": match_part if "=" not in match_part or "priority" not in match_part else "*",
+        "actions": line.split("actions=")[1],
+    })
+
+dp_flows = []
+for line in read("datapath.txt").splitlines():
+    line = line.strip()
+    if not line or "actions:" not in line:
+        continue
+    pkts = re.search(r"packets:(\d+)", line)
+    byts = re.search(r"bytes:(\d+)", line)
+    used = re.search(r"used:([\d.]+)s", line)
+    dp_flows.append({
+        "orig": line,
+        "packets": int(pkts.group(1)) if pkts else 0,
+        "bytes": int(byts.group(1)) if byts else 0,
+        "used_s": float(used.group(1)) if used else None,
+        "actions": line.split("actions:")[1].strip(),
+    })
+
+fdb = []
+for line in read("fdb.txt").splitlines():
+    m = re.match(r"\s*(\d+)\s+(\d+)\s+([0-9a-f:]{17})\s+([\d.]+|LOCAL)", line)
+    if m:
+        fdb.append({"port": int(m.group(1)), "vlan": int(m.group(2)),
+                    "mac": m.group(3), "age_s": m.group(4)})
+
+ports = []
+for line in read("ports.txt").splitlines():
+    m = re.match(r"\s*(\d+|LOCAL)\((\S+)\): addr:([0-9a-f:]{17})", line)
+    if m:
+        ports.append({"ofport": m.group(1), "name": m.group(2), "mac": m.group(3)})
+
+native = read("openflow.json")
+vsctl = read("vsctl.txt")
+# VLAN access-port tags parsed from `ovs-vsctl show` (e.g. "tag: 100").
+access_vlans = sorted({int(t) for t in re.findall(r"tag:\s*(\d+)", vsctl)})
+
+doc = {
+    "_meta": {
+        "generated_by": "cluster_setup.sh capture_ovs_evidence()",
+        "timestamp_utc": datetime.datetime.now(datetime.timezone.utc)
+            .strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "bridge": bridge,
+        "node": node,
+        "ovs_version": ovs_version,
+        "flow_dump_method": method,
+        "access_vlans": access_vlans,
+        "note": ("'ovs-ofctl dump-flows --format=json' is not implemented by "
+                 "released OVS; JSON was produced via the documented fallback "
+                 "and native output is embedded when the flag exists."),
+    },
+    "bridge": bridge,
+    "flows": flows,
+    "datapath_flows": dp_flows,
+    "fdb": fdb,
+    "ports": ports,
+    "bridge_topology": vsctl,
+}
+if native.strip():
+    try:
+        doc["native_json_dump"] = json.loads(native)
+    except ValueError:
+        pass
+
+with open(out, "w") as f:
+    json.dump(doc, f, indent=2)
+print(f"wrote {out}")
+PYEOF
   rm -rf "${tmp}"
 
   python3 -c "
@@ -792,17 +805,11 @@ if not d.get('flows') or not d.get('datapath_flows') or not d.get('fdb'):
 
 # ---------------------------------------------------------------------------
 main() {
-  if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
-    show_help
-    exit 0
-  fi
-
   if [[ "${CLEANUP:-0}" == "1" ]]; then
     kind delete cluster --name "${CLUSTER_NAME}" || true
     exit 0
   fi
 
-  step "Prerequisites and host preflight"
   command -v curl >/dev/null 2>&1 || die "curl is required"
   command -v python3 >/dev/null 2>&1 || die "python3 is required"
   OCI="$(detect_oci)"
@@ -811,45 +818,20 @@ main() {
   install_kubectl
   preflight_docker
   preflight_disk
-  preflight_inotify
   docker system prune -f >/dev/null 2>&1 || true
-
-  step "KinD cluster (${CLUSTER_NAME})"
   create_cluster
-
-  step "Node ready (kindnet default CNI)"
   wait_node_ready
-
-  step "Open vSwitch on KinD node(s)"
   install_ovs_in_nodes "${OCI}"
-
-  step "VXLAN mesh between nodes (no-op on single-node)"
   setup_ovs_vxlan "${OCI}"
-
-  step "Multus CNI ${MULTUS_VERSION}"
   install_multus
-
-  step "OVS-CNI plugin"
   install_ovs_cni
-
-  step "KubeVirt"
   install_kubevirt
-
-  step "Workloads (2 VMs + ping pod) and guest network"
   deploy_workloads
   wait_for_guest_network
-
-  step "OpenFlow baseline (pre-classifier snapshot)"
   capture_flows_before "${OCI}"
-
-  step "Per-source classifier OpenFlow rules"
   install_classifier_flows "${OCI}"
-
-  step "Ping verification (pod↔VM and VM↔VM)"
   run_ping_test
   run_vm_to_vm_ping
-
-  step "Capture OVS evidence bundle"
   capture_ovs_evidence "${OCI}"
 
   log "Done."

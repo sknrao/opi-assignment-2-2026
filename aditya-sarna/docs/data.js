@@ -2,7 +2,7 @@
 window.APP_DATA = {
   "meta": {
     "generated_by": "cluster_setup.sh capture_ovs_evidence()",
-    "timestamp_utc": "2026-07-06T23:47:13Z",
+    "timestamp_utc": "2026-07-07T13:06:33Z",
     "bridge": "br1",
     "node": "ovs-kubevirt-control-plane",
     "ovs_version": "ovs-vsctl (Open vSwitch) 3.5.0",
@@ -15,103 +15,68 @@ window.APP_DATA = {
   "bridge": "br1",
   "flows": [
     {
-      "orig": "cookie=0x0, duration=21.123s, table=0, n_packets=13, n_bytes=1274, idle_age=1, priority=100,ip,nw_src=10.10.0.10 actions=NORMAL",
+      "orig": "cookie=0x0, duration=21.185s, table=0, n_packets=14, n_bytes=1372, idle_age=0, priority=100,ip,nw_src=10.10.0.10 actions=NORMAL",
       "cookie": "0x0",
       "table": 0,
       "priority": 100,
-      "duration_s": 21.123,
-      "n_packets": 13,
-      "n_bytes": 1274,
+      "duration_s": 21.185,
+      "n_packets": 14,
+      "n_bytes": 1372,
       "match": "nw_src=10.10.0.10",
       "actions": "NORMAL"
     },
     {
-      "orig": "cookie=0x0, duration=21.082s, table=0, n_packets=13, n_bytes=1274, idle_age=1, priority=100,ip,nw_src=10.10.0.11 actions=NORMAL",
+      "orig": "cookie=0x0, duration=21.137s, table=0, n_packets=14, n_bytes=1372, idle_age=0, priority=100,ip,nw_src=10.10.0.11 actions=NORMAL",
       "cookie": "0x0",
       "table": 0,
       "priority": 100,
-      "duration_s": 21.082,
-      "n_packets": 13,
-      "n_bytes": 1274,
+      "duration_s": 21.137,
+      "n_packets": 14,
+      "n_bytes": 1372,
       "match": "nw_src=10.10.0.11",
       "actions": "NORMAL"
     },
     {
-      "orig": "cookie=0x0, duration=21.043s, table=0, n_packets=8, n_bytes=784, idle_age=14, priority=100,ip,nw_src=10.10.0.20 actions=NORMAL",
+      "orig": "cookie=0x0, duration=21.100s, table=0, n_packets=8, n_bytes=784, idle_age=14, priority=100,ip,nw_src=10.10.0.20 actions=NORMAL",
       "cookie": "0x0",
       "table": 0,
       "priority": 100,
-      "duration_s": 21.043,
+      "duration_s": 21.1,
       "n_packets": 8,
       "n_bytes": 784,
       "match": "nw_src=10.10.0.20",
       "actions": "NORMAL"
     },
     {
-      "orig": "cookie=0x0, duration=21.004s, table=0, n_packets=8, n_bytes=336, idle_age=6, priority=90,arp actions=NORMAL",
+      "orig": "cookie=0x0, duration=21.065s, table=0, n_packets=8, n_bytes=336, idle_age=6, priority=90,arp actions=NORMAL",
       "cookie": "0x0",
       "table": 0,
       "priority": 90,
-      "duration_s": 21.004,
+      "duration_s": 21.065,
       "n_packets": 8,
       "n_bytes": 336,
       "match": "arp",
       "actions": "NORMAL"
     },
     {
-      "orig": "cookie=0x0, duration=20.964s, table=0, n_packets=9, n_bytes=630, idle_age=1, priority=0 actions=NORMAL",
+      "orig": "cookie=0x0, duration=21.025s, table=0, n_packets=8, n_bytes=560, idle_age=2, priority=0 actions=NORMAL",
       "cookie": "0x0",
       "table": 0,
       "priority": 0,
-      "duration_s": 20.964,
-      "n_packets": 9,
-      "n_bytes": 630,
+      "duration_s": 21.025,
+      "n_packets": 8,
+      "n_bytes": 560,
       "match": "*",
       "actions": "NORMAL"
     }
   ],
   "datapathFlows": [
     {
-      "orig": "recirc_id(0),in_port(3),eth(src=1e:5f:5a:73:79:e2,dst=33:33:00:00:00:02),eth_type(0x86dd),ipv6(frag=no),key32(00 00/00 00), packets:0, bytes:0, used:never, actions:push_vlan(vid=100,pcp=0),1,pop_vlan,2,4",
-      "packets": 0,
-      "bytes": 0,
-      "used_s": null,
-      "actions": "push_vlan(vid=100,pcp=0),1,pop_vlan,2,4"
-    },
-    {
-      "orig": "recirc_id(0),in_port(3),eth(src=ea:93:04:f6:97:bf,dst=33:33:00:00:00:02),eth_type(0x86dd),ipv6(frag=no),key32(00 00/00 00), packets:0, bytes:0, used:never, actions:push_vlan(vid=100,pcp=0),1,pop_vlan,2,4",
-      "packets": 0,
-      "bytes": 0,
-      "used_s": null,
-      "actions": "push_vlan(vid=100,pcp=0),1,pop_vlan,2,4"
-    },
-    {
-      "orig": "recirc_id(0),in_port(4),eth(src=2a:e4:0b:81:5d:5b,dst=33:33:00:00:00:02),eth_type(0x86dd),ipv6(frag=no),key32(00 00/00 00), packets:1, bytes:70, used:2.710s, actions:push_vlan(vid=100,pcp=0),1,pop_vlan,2,3",
-      "packets": 1,
-      "bytes": 70,
-      "used_s": 2.71,
-      "actions": "push_vlan(vid=100,pcp=0),1,pop_vlan,2,3"
-    },
-    {
-      "orig": "recirc_id(0),in_port(3),eth(src=02:a0:00:00:00:0a,dst=02:a0:00:00:00:0b),eth_type(0x0800),ipv4(src=10.10.0.10,frag=no), packets:9, bytes:882, used:0.194s, actions:4",
+      "orig": "recirc_id(0),in_port(3),eth(src=02:a0:00:00:00:0a,dst=02:a0:00:00:00:0b),eth_type(0x0800),ipv4(src=10.10.0.10,frag=no), packets:9, bytes:882, used:0.192s, actions:4",
       "packets": 9,
       "bytes": 882,
-      "used_s": 0.194,
+      "used_s": 0.192,
       "actions": "4"
-    },
-    {
-      "orig": "recirc_id(0),in_port(4),eth(src=02:a0:00:00:00:0b,dst=02:a0:00:00:00:0a),eth_type(0x0800),ipv4(src=10.10.0.11,frag=no), packets:9, bytes:882, used:0.194s, actions:3",
-      "packets": 9,
-      "bytes": 882,
-      "used_s": 0.194,
-      "actions": "3"
-    },
-    {
-      "orig": "recirc_id(0),in_port(4),eth(src=02:a0:00:00:00:0b,dst=02:a0:00:00:00:0a),eth_type(0x0806), packets:1, bytes:42, used:6.279s, actions:3",
-      "packets": 1,
-      "bytes": 42,
-      "used_s": 6.279,
-      "actions": "3"
     },
     {
       "orig": "recirc_id(0),in_port(3),eth(src=02:a0:00:00:00:0a,dst=02:a0:00:00:00:0b),eth_type(0x0806), packets:0, bytes:0, used:never, actions:4",
@@ -119,6 +84,41 @@ window.APP_DATA = {
       "bytes": 0,
       "used_s": null,
       "actions": "4"
+    },
+    {
+      "orig": "recirc_id(0),in_port(4),eth(src=f2:0e:bc:6d:5b:15,dst=33:33:00:00:00:02),eth_type(0x86dd),ipv6(frag=no),key32(00 00/00 00), packets:0, bytes:0, used:never, actions:push_vlan(vid=100,pcp=0),1,pop_vlan,2,3",
+      "packets": 0,
+      "bytes": 0,
+      "used_s": null,
+      "actions": "push_vlan(vid=100,pcp=0),1,pop_vlan,2,3"
+    },
+    {
+      "orig": "recirc_id(0),in_port(4),eth(src=66:a7:cd:a1:b9:77,dst=33:33:00:00:00:02),eth_type(0x86dd),ipv6(frag=no),key32(00 00/00 00), packets:0, bytes:0, used:never, actions:push_vlan(vid=100,pcp=0),1,pop_vlan,2,3",
+      "packets": 0,
+      "bytes": 0,
+      "used_s": null,
+      "actions": "push_vlan(vid=100,pcp=0),1,pop_vlan,2,3"
+    },
+    {
+      "orig": "recirc_id(0),in_port(4),eth(src=02:a0:00:00:00:0b,dst=02:a0:00:00:00:0a),eth_type(0x0800),ipv4(src=10.10.0.11,frag=no), packets:9, bytes:882, used:0.193s, actions:3",
+      "packets": 9,
+      "bytes": 882,
+      "used_s": 0.193,
+      "actions": "3"
+    },
+    {
+      "orig": "recirc_id(0),in_port(3),eth(src=56:36:42:46:7c:bf,dst=33:33:00:00:00:02),eth_type(0x86dd),ipv6(frag=no),key32(00 00/00 00), packets:1, bytes:70, used:7.847s, actions:push_vlan(vid=100,pcp=0),1,pop_vlan,2,4",
+      "packets": 1,
+      "bytes": 70,
+      "used_s": 7.847,
+      "actions": "push_vlan(vid=100,pcp=0),1,pop_vlan,2,4"
+    },
+    {
+      "orig": "recirc_id(0),in_port(4),eth(src=02:a0:00:00:00:0b,dst=02:a0:00:00:00:0a),eth_type(0x0806), packets:1, bytes:42, used:6.278s, actions:3",
+      "packets": 1,
+      "bytes": 42,
+      "used_s": 6.278,
+      "actions": "3"
     }
   ],
   "fdb": [
@@ -126,25 +126,25 @@ window.APP_DATA = {
       "port": 1,
       "vlan": 100,
       "mac": "02:a0:00:00:00:14",
-      "age_s": "13"
-    },
-    {
-      "port": 2,
-      "vlan": 100,
-      "mac": "1e:5f:5a:73:79:e2",
-      "age_s": "7"
+      "age_s": "14"
     },
     {
       "port": 3,
       "vlan": 100,
-      "mac": "2a:e4:0b:81:5d:5b",
-      "age_s": "3"
+      "mac": "f2:0e:bc:6d:5b:15",
+      "age_s": "9"
     },
     {
       "port": 2,
       "vlan": 100,
-      "mac": "ea:93:04:f6:97:bf",
-      "age_s": "2"
+      "mac": "56:36:42:46:7c:bf",
+      "age_s": "8"
+    },
+    {
+      "port": 3,
+      "vlan": 100,
+      "mac": "66:a7:cd:a1:b9:77",
+      "age_s": "3"
     },
     {
       "port": 2,
@@ -162,28 +162,28 @@ window.APP_DATA = {
   "ports": [
     {
       "ofport": "1",
-      "name": "vethe9e7495c",
-      "mac": "62:b8:89:b2:bf:06"
+      "name": "veth6180ac61",
+      "mac": "86:a7:aa:4b:09:4f"
     },
     {
       "ofport": "2",
-      "name": "veth50c5c8b3",
-      "mac": "f2:69:44:12:8c:17"
+      "name": "veth69d1e9ff",
+      "mac": "3e:09:b2:b7:46:da"
     },
     {
       "ofport": "3",
-      "name": "veth733f008d",
-      "mac": "f6:78:e7:f1:a3:03"
+      "name": "veth41bac055",
+      "mac": "46:e4:02:df:13:48"
     },
     {
       "ofport": "LOCAL",
       "name": "br1",
-      "mac": "86:e1:7d:59:59:4c"
+      "mac": "4a:90:03:c9:8b:41"
     }
   ],
-  "bridgeTopology": "46541be4-f6c1-4a35-9f17-72d9b8b5e1d9\n    Bridge br1\n        fail_mode: standalone\n        Port veth50c5c8b3\n            tag: 100\n            Interface veth50c5c8b3\n        Port vethe9e7495c\n            tag: 100\n            Interface vethe9e7495c\n        Port br1\n            Interface br1\n                type: internal\n        Port veth733f008d\n            tag: 100\n            Interface veth733f008d\n    ovs_version: \"3.5.0\"\n",
+  "bridgeTopology": "5981772b-e2e2-4e1a-80ee-23a0f5e81eb7\n    Bridge br1\n        fail_mode: standalone\n        Port veth69d1e9ff\n            tag: 100\n            Interface veth69d1e9ff\n        Port veth6180ac61\n            tag: 100\n            Interface veth6180ac61\n        Port veth41bac055\n            tag: 100\n            Interface veth41bac055\n        Port br1\n            Interface br1\n                type: internal\n    ovs_version: \"3.5.0\"\n",
   "pingBlocks": 4,
-  "pingText": "$ kubectl exec ovs-ping-pod -- ping -c 4 10.10.0.10\nPING 10.10.0.10 (10.10.0.10): 56 data bytes\n64 bytes from 10.10.0.10: seq=0 ttl=64 time=0.597 ms\n64 bytes from 10.10.0.10: seq=1 ttl=64 time=0.227 ms\n64 bytes from 10.10.0.10: seq=2 ttl=64 time=0.251 ms\n64 bytes from 10.10.0.10: seq=3 ttl=64 time=0.214 ms\n\n--- 10.10.0.10 ping statistics ---\n4 packets transmitted, 4 packets received, 0% packet loss\nround-trip min/avg/max = 0.214/0.322/0.597 ms\n\n$ kubectl exec ovs-ping-pod -- ping -c 4 10.10.0.11\nPING 10.10.0.11 (10.10.0.11): 56 data bytes\n64 bytes from 10.10.0.11: seq=0 ttl=64 time=0.518 ms\n64 bytes from 10.10.0.11: seq=1 ttl=64 time=0.238 ms\n64 bytes from 10.10.0.11: seq=2 ttl=64 time=0.217 ms\n64 bytes from 10.10.0.11: seq=3 ttl=64 time=0.201 ms\n\n--- 10.10.0.11 ping statistics ---\n4 packets transmitted, 4 packets received, 0% packet loss\nround-trip min/avg/max = 0.201/0.293/0.518 ms\n\n--- VM-to-VM pings across br1 (virtctl console + expect) ---\nThese pings originate inside the CirrOS guests. 10.10.0.0/24 routes only\nthrough br1 (eth1), so success proves VM-to-VM switching in OVS.\n\n----- DIRECTION: vm-a (10.10.0.10) -> vm-b (10.10.0.11) -----\n\nspawn /home/runner/.local/bin/virtctl console vm-a --namespace default\n\nSuccessfully connected to vm-a console. Press Ctrl+] or Ctrl+5 to exit console.\n\n\nlogin as 'cirros' user. default password: 'gocubsgo'. use 'sudo' for root.\n\nvm-a login: gocubsgo\nPassword: \nLogin incorrect\nvm-a login: cirros\nPassword: \n$ ping -c 5 10.10.0.11\nPING 10.10.0.11 (10.10.0.11): 56 data bytes\n64 bytes from 10.10.0.11: seq=0 ttl=64 time=0.817 ms\n64 bytes from 10.10.0.11: seq=1 ttl=64 time=0.308 ms\n64 bytes from 10.10.0.11: seq=2 ttl=64 time=0.327 ms\n64 bytes from 10.10.0.11: seq=3 ttl=64 time=0.346 ms\n64 bytes from 10.10.0.11: seq=4 ttl=64 time=0.334 ms\n\n--- 10.10.0.11 ping statistics ---\n5 packets transmitted, 5 packets received, 0% packet loss\nround-trip min/avg/max = 0.308/0.426/0.817 ms\n$\n\n----- DIRECTION: vm-b (10.10.0.11) -> vm-a (10.10.0.10) -----\n\nspawn /home/runner/.local/bin/virtctl console vm-b --namespace default\n\nSuccessfully connected to vm-b console. Press Ctrl+] or Ctrl+5 to exit console.\n\n\nlogin as 'cirros' user. default password: 'gocubsgo'. use 'sudo' for root.\n\nvm-b login: gocubsgo\nPassword: \nLogin incorrect\nvm-b login: cirros\nPassword: \n$ ping -c 5 10.10.0.10\nPING 10.10.0.10 (10.10.0.10): 56 data bytes\n64 bytes from 10.10.0.10: seq=0 ttl=64 time=0.396 ms\n64 bytes from 10.10.0.10: seq=1 ttl=64 time=0.297 ms\n64 bytes from 10.10.0.10: seq=2 ttl=64 time=0.265 ms\n64 bytes from 10.10.0.10: seq=3 ttl=64 time=0.301 ms\n64 bytes from 10.10.0.10: seq=4 ttl=64 time=0.313 ms\n\n--- 10.10.0.10 ping statistics ---\n5 packets transmitted, 5 packets received, 0% packet loss\nround-trip min/avg/max = 0.265/0.314/0.396 ms\n$\n",
+  "pingText": "$ kubectl exec ovs-ping-pod -- ping -c 4 10.10.0.10\nPING 10.10.0.10 (10.10.0.10): 56 data bytes\n64 bytes from 10.10.0.10: seq=0 ttl=64 time=0.559 ms\n64 bytes from 10.10.0.10: seq=1 ttl=64 time=0.159 ms\n64 bytes from 10.10.0.10: seq=2 ttl=64 time=0.193 ms\n64 bytes from 10.10.0.10: seq=3 ttl=64 time=0.197 ms\n\n--- 10.10.0.10 ping statistics ---\n4 packets transmitted, 4 packets received, 0% packet loss\nround-trip min/avg/max = 0.159/0.277/0.559 ms\n\n$ kubectl exec ovs-ping-pod -- ping -c 4 10.10.0.11\nPING 10.10.0.11 (10.10.0.11): 56 data bytes\n64 bytes from 10.10.0.11: seq=0 ttl=64 time=0.796 ms\n64 bytes from 10.10.0.11: seq=1 ttl=64 time=0.256 ms\n64 bytes from 10.10.0.11: seq=2 ttl=64 time=0.258 ms\n64 bytes from 10.10.0.11: seq=3 ttl=64 time=0.279 ms\n\n--- 10.10.0.11 ping statistics ---\n4 packets transmitted, 4 packets received, 0% packet loss\nround-trip min/avg/max = 0.256/0.397/0.796 ms\n\n$ virtctl console vm-a   # login, then: ping -c 5 10.10.0.11  (VM->VM across br1)\nPING 10.10.0.11 (10.10.0.11): 56 data bytes\n64 bytes from 10.10.0.11: seq=0 ttl=64 time=0.897 ms\n64 bytes from 10.10.0.11: seq=1 ttl=64 time=0.317 ms\n64 bytes from 10.10.0.11: seq=2 ttl=64 time=0.258 ms\n64 bytes from 10.10.0.11: seq=3 ttl=64 time=0.335 ms\n64 bytes from 10.10.0.11: seq=4 ttl=64 time=0.346 ms\n\n--- 10.10.0.11 ping statistics ---\n5 packets transmitted, 5 packets received, 0% packet loss\n\n$ virtctl console vm-b   # login, then: ping -c 5 10.10.0.10  (VM->VM across br1)\nPING 10.10.0.10 (10.10.0.10): 56 data bytes\n64 bytes from 10.10.0.10: seq=0 ttl=64 time=0.599 ms\n64 bytes from 10.10.0.10: seq=1 ttl=64 time=0.343 ms\n64 bytes from 10.10.0.10: seq=2 ttl=64 time=0.308 ms\n64 bytes from 10.10.0.10: seq=3 ttl=64 time=0.415 ms\n64 bytes from 10.10.0.10: seq=4 ttl=64 time=0.432 ms\n\n--- 10.10.0.10 ping statistics ---\n5 packets transmitted, 5 packets received, 0% packet loss\n",
   "pingDirections": [
     {
       "id": "pod-to-vm-a",
@@ -194,7 +194,7 @@ window.APP_DATA = {
       "method": "kubectl",
       "pass": true,
       "ttl64": true,
-      "text": "$ kubectl exec ovs-ping-pod -- ping -c 4 10.10.0.10\nPING 10.10.0.10 (10.10.0.10): 56 data bytes\n64 bytes from 10.10.0.10: seq=0 ttl=64 time=0.597 ms\n64 bytes from 10.10.0.10: seq=1 ttl=64 time=0.227 ms\n64 bytes from 10.10.0.10: seq=2 ttl=64 time=0.251 ms\n64 bytes from 10.10.0.10: seq=3 ttl=64 time=0.214 ms\n\n--- 10.10.0.10 ping statistics ---\n4 packets transmitted, 4 packets received, 0% packet loss\nround-trip min/avg/max = 0.214/0.322/0.597 ms"
+      "text": "$ kubectl exec ovs-ping-pod -- ping -c 4 10.10.0.10\nPING 10.10.0.10 (10.10.0.10): 56 data bytes\n64 bytes from 10.10.0.10: seq=0 ttl=64 time=0.559 ms\n64 bytes from 10.10.0.10: seq=1 ttl=64 time=0.159 ms\n64 bytes from 10.10.0.10: seq=2 ttl=64 time=0.193 ms\n64 bytes from 10.10.0.10: seq=3 ttl=64 time=0.197 ms\n\n--- 10.10.0.10 ping statistics ---\n4 packets transmitted, 4 packets received, 0% packet loss\nround-trip min/avg/max = 0.159/0.277/0.559 ms"
     },
     {
       "id": "pod-to-vm-b",
@@ -205,7 +205,7 @@ window.APP_DATA = {
       "method": "kubectl",
       "pass": true,
       "ttl64": true,
-      "text": "$ kubectl exec ovs-ping-pod -- ping -c 4 10.10.0.11\nPING 10.10.0.11 (10.10.0.11): 56 data bytes\n64 bytes from 10.10.0.11: seq=0 ttl=64 time=0.518 ms\n64 bytes from 10.10.0.11: seq=1 ttl=64 time=0.238 ms\n64 bytes from 10.10.0.11: seq=2 ttl=64 time=0.217 ms\n64 bytes from 10.10.0.11: seq=3 ttl=64 time=0.201 ms\n\n--- 10.10.0.11 ping statistics ---\n4 packets transmitted, 4 packets received, 0% packet loss\nround-trip min/avg/max = 0.201/0.293/0.518 ms\n\n--- VM-to-VM pings across br1 (virtctl console + expect) ---\nThese pings originate inside the CirrOS guests. 10.10.0.0/24 routes only\nthrough br1 (eth1), so success proves VM-to-VM switching in OVS."
+      "text": "$ kubectl exec ovs-ping-pod -- ping -c 4 10.10.0.11\nPING 10.10.0.11 (10.10.0.11): 56 data bytes\n64 bytes from 10.10.0.11: seq=0 ttl=64 time=0.796 ms\n64 bytes from 10.10.0.11: seq=1 ttl=64 time=0.256 ms\n64 bytes from 10.10.0.11: seq=2 ttl=64 time=0.258 ms\n64 bytes from 10.10.0.11: seq=3 ttl=64 time=0.279 ms\n\n--- 10.10.0.11 ping statistics ---\n4 packets transmitted, 4 packets received, 0% packet loss\nround-trip min/avg/max = 0.256/0.397/0.796 ms"
     },
     {
       "id": "vm-a-to-vm-b",
@@ -216,7 +216,7 @@ window.APP_DATA = {
       "method": "virtctl",
       "pass": true,
       "ttl64": true,
-      "text": "----- DIRECTION: vm-a (10.10.0.10) -> vm-b (10.10.0.11) -----\n\nspawn /home/runner/.local/bin/virtctl console vm-a --namespace default\n\nSuccessfully connected to vm-a console. Press Ctrl+] or Ctrl+5 to exit console.\n\n\nlogin as 'cirros' user. default password: 'gocubsgo'. use 'sudo' for root.\n\nvm-a login: gocubsgo\nPassword: \nLogin incorrect\nvm-a login: cirros\nPassword: \n$ ping -c 5 10.10.0.11\nPING 10.10.0.11 (10.10.0.11): 56 data bytes\n64 bytes from 10.10.0.11: seq=0 ttl=64 time=0.817 ms\n64 bytes from 10.10.0.11: seq=1 ttl=64 time=0.308 ms\n64 bytes from 10.10.0.11: seq=2 ttl=64 time=0.327 ms\n64 bytes from 10.10.0.11: seq=3 ttl=64 time=0.346 ms\n64 bytes from 10.10.0.11: seq=4 ttl=64 time=0.334 ms\n\n--- 10.10.0.11 ping statistics ---\n5 packets transmitted, 5 packets received, 0% packet loss\nround-trip min/avg/max = 0.308/0.426/0.817 ms\n$"
+      "text": "$ virtctl console vm-a   # login, then: ping -c 5 10.10.0.11  (VM->VM across br1)\nPING 10.10.0.11 (10.10.0.11): 56 data bytes\n64 bytes from 10.10.0.11: seq=0 ttl=64 time=0.897 ms\n64 bytes from 10.10.0.11: seq=1 ttl=64 time=0.317 ms\n64 bytes from 10.10.0.11: seq=2 ttl=64 time=0.258 ms\n64 bytes from 10.10.0.11: seq=3 ttl=64 time=0.335 ms\n64 bytes from 10.10.0.11: seq=4 ttl=64 time=0.346 ms\n\n--- 10.10.0.11 ping statistics ---\n5 packets transmitted, 5 packets received, 0% packet loss"
     },
     {
       "id": "vm-b-to-vm-a",
@@ -227,19 +227,19 @@ window.APP_DATA = {
       "method": "virtctl",
       "pass": true,
       "ttl64": true,
-      "text": "----- DIRECTION: vm-b (10.10.0.11) -> vm-a (10.10.0.10) -----\n\nspawn /home/runner/.local/bin/virtctl console vm-b --namespace default\n\nSuccessfully connected to vm-b console. Press Ctrl+] or Ctrl+5 to exit console.\n\n\nlogin as 'cirros' user. default password: 'gocubsgo'. use 'sudo' for root.\n\nvm-b login: gocubsgo\nPassword: \nLogin incorrect\nvm-b login: cirros\nPassword: \n$ ping -c 5 10.10.0.10\nPING 10.10.0.10 (10.10.0.10): 56 data bytes\n64 bytes from 10.10.0.10: seq=0 ttl=64 time=0.396 ms\n64 bytes from 10.10.0.10: seq=1 ttl=64 time=0.297 ms\n64 bytes from 10.10.0.10: seq=2 ttl=64 time=0.265 ms\n64 bytes from 10.10.0.10: seq=3 ttl=64 time=0.301 ms\n64 bytes from 10.10.0.10: seq=4 ttl=64 time=0.313 ms\n\n--- 10.10.0.10 ping statistics ---\n5 packets transmitted, 5 packets received, 0% packet loss\nround-trip min/avg/max = 0.265/0.314/0.396 ms\n$"
+      "text": "$ virtctl console vm-b   # login, then: ping -c 5 10.10.0.10  (VM->VM across br1)\nPING 10.10.0.10 (10.10.0.10): 56 data bytes\n64 bytes from 10.10.0.10: seq=0 ttl=64 time=0.599 ms\n64 bytes from 10.10.0.10: seq=1 ttl=64 time=0.343 ms\n64 bytes from 10.10.0.10: seq=2 ttl=64 time=0.308 ms\n64 bytes from 10.10.0.10: seq=3 ttl=64 time=0.415 ms\n64 bytes from 10.10.0.10: seq=4 ttl=64 time=0.432 ms\n\n--- 10.10.0.10 ping statistics ---\n5 packets transmitted, 5 packets received, 0% packet loss"
     }
   ],
-  "flowsBefore": "NXST_FLOW reply (xid=0x4):\n cookie=0x0, duration=175.170s, table=0, n_packets=103, n_bytes=8490, idle_age=1, priority=0 actions=NORMAL\n",
-  "flowsAfter": "NXST_FLOW reply (xid=0x4):\n cookie=0x0, duration=21.123s, table=0, n_packets=13, n_bytes=1274, idle_age=1, priority=100,ip,nw_src=10.10.0.10 actions=NORMAL\n cookie=0x0, duration=21.082s, table=0, n_packets=13, n_bytes=1274, idle_age=1, priority=100,ip,nw_src=10.10.0.11 actions=NORMAL\n cookie=0x0, duration=21.043s, table=0, n_packets=8, n_bytes=784, idle_age=14, priority=100,ip,nw_src=10.10.0.20 actions=NORMAL\n cookie=0x0, duration=21.004s, table=0, n_packets=8, n_bytes=336, idle_age=6, priority=90,arp actions=NORMAL\n cookie=0x0, duration=20.964s, table=0, n_packets=9, n_bytes=630, idle_age=1, priority=0 actions=NORMAL\n",
+  "flowsBefore": "NXST_FLOW reply (xid=0x4):\n cookie=0x0, duration=152.802s, table=0, n_packets=82, n_bytes=6768, idle_age=0, priority=0 actions=NORMAL\n",
+  "flowsAfter": "NXST_FLOW reply (xid=0x4):\n cookie=0x0, duration=21.185s, table=0, n_packets=14, n_bytes=1372, idle_age=0, priority=100,ip,nw_src=10.10.0.10 actions=NORMAL\n cookie=0x0, duration=21.137s, table=0, n_packets=14, n_bytes=1372, idle_age=0, priority=100,ip,nw_src=10.10.0.11 actions=NORMAL\n cookie=0x0, duration=21.100s, table=0, n_packets=8, n_bytes=784, idle_age=14, priority=100,ip,nw_src=10.10.0.20 actions=NORMAL\n cookie=0x0, duration=21.065s, table=0, n_packets=8, n_bytes=336, idle_age=6, priority=90,arp actions=NORMAL\n cookie=0x0, duration=21.025s, table=0, n_packets=8, n_bytes=560, idle_age=2, priority=0 actions=NORMAL\n",
   "executionMode": {
     "useEmulation": "",
     "accel": "-accel kvm",
     "kvmPresent": true,
     "vmxCount": 4,
-    "raw": "=== KubeVirt useEmulation ===\n\n\n=== /dev/kvm on node ovs-kubevirt-control-plane ===\ncrw-rw-rw- 1 root render 10, 232 Jul  6 23:46 /dev/kvm\n\n=== QEMU accelerator flag on virt-launcher-vm-a ===\n-accel kvm\n\n=== ovs-vsctl --version on node ===\novs-vsctl (Open vSwitch) 3.5.0\n\n=== node ===\novs-kubevirt-control-plane"
+    "raw": "=== KubeVirt useEmulation ===\n\n\n=== /dev/kvm on node ovs-kubevirt-control-plane ===\ncrw-rw-rw- 1 root render 10, 232 Jul  7 13:06 /dev/kvm\n\n=== QEMU accelerator flag on virt-launcher-vm-a ===\n-accel kvm\n\n=== ovs-vsctl --version on node ===\novs-vsctl (Open vSwitch) 3.5.0\n\n=== node ===\novs-kubevirt-control-plane"
   },
-  "kvmProof": "=== /dev/kvm on runner / KinD node ===\ncrw-rw-rw- 1 root render 10, 232 Jul  6 23:46 /dev/kvm\n\n=== vmx/svm CPU flags (count) ===\n4\n\n=== KubeVirt useEmulation ===\n\n=== QEMU accel flag (virt-launcher-vm-a) ===\n-accel kvm",
+  "kvmProof": "=== /dev/kvm on runner / KinD node ===\ncrw-rw-rw- 1 root render 10, 232 Jul  7 13:06 /dev/kvm\n\n=== vmx/svm CPU flags (count) ===\n4\n\n=== KubeVirt useEmulation ===\n\n=== QEMU accel flag (virt-launcher-vm-a) ===\n-accel kvm",
   "stats": {
     "classifierRules": 3,
     "classifierMinPackets": 8,

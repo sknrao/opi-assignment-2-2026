@@ -1,5 +1,12 @@
 # Mentor Review Checklist (5 minutes)
 
+## Quick Links
+
+- App (GitHub Pages): https://aditya-sarna.github.io/opi-assignment-2-ovs/
+- Repository: https://github.com/Aditya-Sarna/opi-assignment-2-ovs
+- Workflow runs (all): https://github.com/Aditya-Sarna/opi-assignment-2-ovs/actions/workflows/capture.yml
+- Latest successful run: https://github.com/Aditya-Sarna/opi-assignment-2-ovs/actions/runs/28868065521
+
 ## Review prerequisites
 
 ```bash

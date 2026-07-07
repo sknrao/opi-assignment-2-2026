@@ -1,79 +1,43 @@
 $ kubectl exec ovs-ping-pod -- ping -c 4 10.10.0.10
 PING 10.10.0.10 (10.10.0.10): 56 data bytes
-64 bytes from 10.10.0.10: seq=0 ttl=64 time=0.597 ms
-64 bytes from 10.10.0.10: seq=1 ttl=64 time=0.227 ms
-64 bytes from 10.10.0.10: seq=2 ttl=64 time=0.251 ms
-64 bytes from 10.10.0.10: seq=3 ttl=64 time=0.214 ms
+64 bytes from 10.10.0.10: seq=0 ttl=64 time=0.559 ms
+64 bytes from 10.10.0.10: seq=1 ttl=64 time=0.159 ms
+64 bytes from 10.10.0.10: seq=2 ttl=64 time=0.193 ms
+64 bytes from 10.10.0.10: seq=3 ttl=64 time=0.197 ms
 
 --- 10.10.0.10 ping statistics ---
 4 packets transmitted, 4 packets received, 0% packet loss
-round-trip min/avg/max = 0.214/0.322/0.597 ms
+round-trip min/avg/max = 0.159/0.277/0.559 ms
 
 $ kubectl exec ovs-ping-pod -- ping -c 4 10.10.0.11
 PING 10.10.0.11 (10.10.0.11): 56 data bytes
-64 bytes from 10.10.0.11: seq=0 ttl=64 time=0.518 ms
-64 bytes from 10.10.0.11: seq=1 ttl=64 time=0.238 ms
-64 bytes from 10.10.0.11: seq=2 ttl=64 time=0.217 ms
-64 bytes from 10.10.0.11: seq=3 ttl=64 time=0.201 ms
+64 bytes from 10.10.0.11: seq=0 ttl=64 time=0.796 ms
+64 bytes from 10.10.0.11: seq=1 ttl=64 time=0.256 ms
+64 bytes from 10.10.0.11: seq=2 ttl=64 time=0.258 ms
+64 bytes from 10.10.0.11: seq=3 ttl=64 time=0.279 ms
 
 --- 10.10.0.11 ping statistics ---
 4 packets transmitted, 4 packets received, 0% packet loss
-round-trip min/avg/max = 0.201/0.293/0.518 ms
+round-trip min/avg/max = 0.256/0.397/0.796 ms
 
---- VM-to-VM pings across br1 (virtctl console + expect) ---
-These pings originate inside the CirrOS guests. 10.10.0.0/24 routes only
-through br1 (eth1), so success proves VM-to-VM switching in OVS.
-
------ DIRECTION: vm-a (10.10.0.10) -> vm-b (10.10.0.11) -----
-
-spawn /home/runner/.local/bin/virtctl console vm-a --namespace default
-
-Successfully connected to vm-a console. Press Ctrl+] or Ctrl+5 to exit console.
-
-
-login as 'cirros' user. default password: 'gocubsgo'. use 'sudo' for root.
-
-vm-a login: gocubsgo
-Password: 
-Login incorrect
-vm-a login: cirros
-Password: 
-$ ping -c 5 10.10.0.11
+$ virtctl console vm-a   # login, then: ping -c 5 10.10.0.11  (VM->VM across br1)
 PING 10.10.0.11 (10.10.0.11): 56 data bytes
-64 bytes from 10.10.0.11: seq=0 ttl=64 time=0.817 ms
-64 bytes from 10.10.0.11: seq=1 ttl=64 time=0.308 ms
-64 bytes from 10.10.0.11: seq=2 ttl=64 time=0.327 ms
-64 bytes from 10.10.0.11: seq=3 ttl=64 time=0.346 ms
-64 bytes from 10.10.0.11: seq=4 ttl=64 time=0.334 ms
+64 bytes from 10.10.0.11: seq=0 ttl=64 time=0.897 ms
+64 bytes from 10.10.0.11: seq=1 ttl=64 time=0.317 ms
+64 bytes from 10.10.0.11: seq=2 ttl=64 time=0.258 ms
+64 bytes from 10.10.0.11: seq=3 ttl=64 time=0.335 ms
+64 bytes from 10.10.0.11: seq=4 ttl=64 time=0.346 ms
 
 --- 10.10.0.11 ping statistics ---
 5 packets transmitted, 5 packets received, 0% packet loss
-round-trip min/avg/max = 0.308/0.426/0.817 ms
-$
 
------ DIRECTION: vm-b (10.10.0.11) -> vm-a (10.10.0.10) -----
-
-spawn /home/runner/.local/bin/virtctl console vm-b --namespace default
-
-Successfully connected to vm-b console. Press Ctrl+] or Ctrl+5 to exit console.
-
-
-login as 'cirros' user. default password: 'gocubsgo'. use 'sudo' for root.
-
-vm-b login: gocubsgo
-Password: 
-Login incorrect
-vm-b login: cirros
-Password: 
-$ ping -c 5 10.10.0.10
+$ virtctl console vm-b   # login, then: ping -c 5 10.10.0.10  (VM->VM across br1)
 PING 10.10.0.10 (10.10.0.10): 56 data bytes
-64 bytes from 10.10.0.10: seq=0 ttl=64 time=0.396 ms
-64 bytes from 10.10.0.10: seq=1 ttl=64 time=0.297 ms
-64 bytes from 10.10.0.10: seq=2 ttl=64 time=0.265 ms
-64 bytes from 10.10.0.10: seq=3 ttl=64 time=0.301 ms
-64 bytes from 10.10.0.10: seq=4 ttl=64 time=0.313 ms
+64 bytes from 10.10.0.10: seq=0 ttl=64 time=0.599 ms
+64 bytes from 10.10.0.10: seq=1 ttl=64 time=0.343 ms
+64 bytes from 10.10.0.10: seq=2 ttl=64 time=0.308 ms
+64 bytes from 10.10.0.10: seq=3 ttl=64 time=0.415 ms
+64 bytes from 10.10.0.10: seq=4 ttl=64 time=0.432 ms
 
 --- 10.10.0.10 ping statistics ---
 5 packets transmitted, 5 packets received, 0% packet loss
-round-trip min/avg/max = 0.265/0.314/0.396 ms
-$
