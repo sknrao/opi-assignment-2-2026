@@ -1,0 +1,5 @@
+OFPT_FEATURES_REPLY (xid=0x2): (bridge br1)
+ 1(veth643da979): addr:46:a2:44:90:26:44
+ 2(veth0cd36616): addr:72:f1:f7:e3:3a:30
+ 3(veth643d6326): addr:c6:17:9a:50:f7:28
+ LOCAL(br1): addr:6e:89:17:4f:30:4a

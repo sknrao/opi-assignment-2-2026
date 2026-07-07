@@ -1,0 +1,14 @@
+=== KubeVirt useEmulation ===
+
+
+=== /dev/kvm on node ovs-kubevirt-control-plane ===
+crw-rw-rw- 1 root render 10, 232 Jul  6 22:40 /dev/kvm
+
+=== QEMU accelerator flag on virt-launcher-vm-a ===
+-accel kvm
+
+=== ovs-vsctl --version on node ===
+ovs-vsctl (Open vSwitch) 3.5.0
+
+=== node ===
+ovs-kubevirt-control-plane

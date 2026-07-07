@@ -1,0 +1,181 @@
+# manifests.yaml - all Custom Resources for the OVS datapath challenge.
+#
+# Topology (all endpoints share L2 domain 10.10.0.0/24 on OVS bridge br1):
+#
+#   vm-a   (CirrOS, eth1 = 10.10.0.10, MAC 02:a0:00:00:00:0a)
+#   vm-b   (CirrOS, eth1 = 10.10.0.11, MAC 02:a0:00:00:00:0b)
+#   ovs-ping-pod (net1 = 10.10.0.20,  MAC 02:a0:00:00:00:14)
+#
+# Two VMs prove VM<->VM switching across the bridge; the pod proves
+# pod<->VM switching and gives a stable exec target for the ping capture.
+#
+# Apply after the stack is up:  kubectl apply -f manifests.yaml
+---
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: ovs-net
+  namespace: default
+  annotations:
+    # Lets the scheduler place workloads only on nodes where the ovs-cni
+    # marker has advertised bridge br1 as an allocatable resource.
+    k8s.v1.cni.cncf.io/resourceName: ovs-cni.network.kubevirt.io/br1
+spec:
+  # No IPAM block: endpoints self-assign static IPs (CirrOS via its userdata
+  # script, the pod via its entrypoint). This keeps the bridge a pure L2
+  # datapath, which is exactly what gets offloaded to DPU hardware later.
+  #
+  # vlan 100: every endpoint is attached as an OVS access port on VLAN 100.
+  # Untagged guest/pod frames are tagged internally on ingress and stripped on
+  # egress, so connectivity is unchanged while the OVS tag/strip behaviour
+  # becomes visible in the evidence (ovs-vsctl "tag: 100", FDB VLAN 100).
+  config: '{
+      "cniVersion": "0.4.0",
+      "type": "ovs",
+      "bridge": "br1",
+      "vlan": 100
+    }'
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-a
+  namespace: default
+  labels:
+    app: ovs-datapath-demo
+spec:
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: vm-a
+        app: ovs-datapath-demo
+    spec:
+      architecture: amd64
+      terminationGracePeriodSeconds: 0
+      domain:
+        machine:
+          type: q35
+        devices:
+          disks:
+            - name: containerdisk
+              disk:
+                bus: virtio
+            - name: cloudinitdisk
+              disk:
+                bus: virtio
+          interfaces:
+            - name: default
+              masquerade: {}          # eth0: pod network (console/debug reachability)
+            - name: ovs
+              bridge: {}              # eth1: OVS secondary network under test
+              macAddress: "02:a0:00:00:00:0a"
+        resources:
+          requests:
+            memory: 256Mi
+      networks:
+        - name: default
+          pod: {}
+        - name: ovs
+          multus:
+            networkName: ovs-net
+      volumes:
+        - name: containerdisk
+          containerDisk:
+            image: quay.io/kubevirt/cirros-container-disk-demo
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            # CirrOS does not implement cloud-init network-config; it executes
+            # userData as a plain shell script, so configure eth1 directly.
+            userData: |
+              #!/bin/sh
+              sudo ip addr add 10.10.0.10/24 dev eth1
+              sudo ip link set eth1 up
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-b
+  namespace: default
+  labels:
+    app: ovs-datapath-demo
+spec:
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: vm-b
+        app: ovs-datapath-demo
+    spec:
+      architecture: amd64
+      terminationGracePeriodSeconds: 0
+      domain:
+        machine:
+          type: q35
+        devices:
+          disks:
+            - name: containerdisk
+              disk:
+                bus: virtio
+            - name: cloudinitdisk
+              disk:
+                bus: virtio
+          interfaces:
+            - name: default
+              masquerade: {}
+            - name: ovs
+              bridge: {}
+              macAddress: "02:a0:00:00:00:0b"
+        resources:
+          requests:
+            memory: 256Mi
+      networks:
+        - name: default
+          pod: {}
+        - name: ovs
+          multus:
+            networkName: ovs-net
+      volumes:
+        - name: containerdisk
+          containerDisk:
+            image: quay.io/kubevirt/cirros-container-disk-demo
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |
+              #!/bin/sh
+              sudo ip addr add 10.10.0.11/24 dev eth1
+              sudo ip link set eth1 up
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ovs-ping-pod
+  namespace: default
+  labels:
+    app: ovs-datapath-demo
+  annotations:
+    k8s.v1.cni.cncf.io/networks: |-
+      [
+        {
+          "name": "ovs-net",
+          "interface": "net1",
+          "mac": "02:a0:00:00:00:14"
+        }
+      ]
+spec:
+  containers:
+    - name: ping
+      image: alpine:3.20
+      # Self-assign the static IP on the OVS-attached interface, then idle.
+      command:
+        - /bin/sh
+        - -c
+        - |
+          ip addr add 10.10.0.20/24 dev net1 2>/dev/null || true
+          ip link set net1 up
+          trap : TERM INT; sleep infinity & wait
+      securityContext:
+        capabilities:
+          add:
+            - NET_ADMIN
+            - NET_RAW

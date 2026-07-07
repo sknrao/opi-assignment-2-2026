@@ -1,0 +1,6 @@
+flowchart LR
+    G["vm-a guest\nvirtio-net"] <-->|vDPA doorbell + DMA| VF1["VF"]
+    VF1 --> ESW["eSwitch ASIC\nVLAN 100 HW"]
+    ESW --> VF2["VF pod"]
+    VF2 <-->|vDPA| P["ovs-ping-pod net1"]
+    CTRL["KubeVirt + vDPA CNI\nonce at boot"] -.-> VF1

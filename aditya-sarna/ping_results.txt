@@ -1,0 +1,67 @@
+$ kubectl exec ovs-ping-pod -- ping -c 4 10.10.0.10
+PING 10.10.0.10 (10.10.0.10): 56 data bytes
+64 bytes from 10.10.0.10: seq=0 ttl=64 time=0.601 ms
+64 bytes from 10.10.0.10: seq=1 ttl=64 time=0.455 ms
+64 bytes from 10.10.0.10: seq=2 ttl=64 time=0.967 ms
+64 bytes from 10.10.0.10: seq=3 ttl=64 time=0.557 ms
+
+--- 10.10.0.10 ping statistics ---
+4 packets transmitted, 4 packets received, 0% packet loss
+round-trip min/avg/max = 0.455/0.645/0.967 ms
+
+$ kubectl exec ovs-ping-pod -- ping -c 4 10.10.0.11
+PING 10.10.0.11 (10.10.0.11): 56 data bytes
+64 bytes from 10.10.0.11: seq=0 ttl=64 time=0.693 ms
+64 bytes from 10.10.0.11: seq=1 ttl=64 time=0.503 ms
+64 bytes from 10.10.0.11: seq=2 ttl=64 time=0.491 ms
+64 bytes from 10.10.0.11: seq=3 ttl=64 time=0.485 ms
+
+--- 10.10.0.11 ping statistics ---
+4 packets transmitted, 4 packets received, 0% packet loss
+round-trip min/avg/max = 0.485/0.543/0.693 ms
+
+--- VM↔VM direct pings across br1 (via virtctl console + expect) ---
+These pings originate from inside the CirrOS guest. 10.10.0.0/24 only
+routes through br1 (eth1), so success proves VM-to-VM switching in OVS.
+
+----- DIRECTION 3: vm-a (10.10.0.10) -> vm-b (10.10.0.11) [from vm-a console] -----
+
+spawn virtctl console vm-a --namespace default
+
+Successfully connected to vm-a console. Press Ctrl+] or Ctrl+5 to exit console.
+
+login as 'cirros' user. default password: 'gocubsgo'. use 'sudo' for root.
+vm-a login: cirros
+Password: 
+$ ping -c 5 10.10.0.11
+PING 10.10.0.11 (10.10.0.11): 56 data bytes
+64 bytes from 10.10.0.11: seq=0 ttl=64 time=2.183 ms
+64 bytes from 10.10.0.11: seq=1 ttl=64 time=1.547 ms
+64 bytes from 10.10.0.11: seq=2 ttl=64 time=1.891 ms
+64 bytes from 10.10.0.11: seq=3 ttl=64 time=2.054 ms
+64 bytes from 10.10.0.11: seq=4 ttl=64 time=1.723 ms
+
+--- 10.10.0.11 ping statistics ---
+5 packets transmitted, 5 packets received, 0% packet loss
+round-trip min/avg/max = 1.547/1.879/2.183 ms
+
+----- DIRECTION 4: vm-b (10.10.0.11) -> vm-a (10.10.0.10) [from vm-b console] -----
+
+spawn virtctl console vm-b --namespace default
+
+Successfully connected to vm-b console. Press Ctrl+] or Ctrl+5 to exit console.
+
+login as 'cirros' user. default password: 'gocubsgo'. use 'sudo' for root.
+vm-b login: cirros
+Password: 
+$ ping -c 5 10.10.0.10
+PING 10.10.0.10 (10.10.0.10): 56 data bytes
+64 bytes from 10.10.0.10: seq=0 ttl=64 time=1.934 ms
+64 bytes from 10.10.0.10: seq=1 ttl=64 time=1.682 ms
+64 bytes from 10.10.0.10: seq=2 ttl=64 time=2.011 ms
+64 bytes from 10.10.0.10: seq=3 ttl=64 time=1.758 ms
+64 bytes from 10.10.0.10: seq=4 ttl=64 time=1.621 ms
+
+--- 10.10.0.10 ping statistics ---
+5 packets transmitted, 5 packets received, 0% packet loss
+round-trip min/avg/max = 1.621/1.801/2.011 ms

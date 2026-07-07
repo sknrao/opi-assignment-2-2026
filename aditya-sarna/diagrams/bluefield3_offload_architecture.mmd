@@ -1,0 +1,17 @@
+flowchart TB
+    subgraph host["Host / Kubernetes"]
+        KV["KubeVirt + Multus"]
+        OVSD["ovs-vswitchd on DPU Arm\nhw-offload=true"]
+    end
+    subgraph bf3["BlueField-3 switchdev"]
+        R0["pf0vf0 repr."] --> ESW["eSwitch TCAM"]
+        R1["pf0vf1 repr."] --> ESW
+        R2["pf0vf2 repr."] --> ESW
+        VF0["VF vm-a"] <--> ESW
+        VF1["VF vm-b"] <--> ESW
+        VF2["VF pod"] <--> ESW
+    end
+    KV --> OVSD
+    OVSD -. OpenFlow install .-> R0
+    OVSD -. OpenFlow install .-> R1
+    OVSD -. OpenFlow install .-> R2
