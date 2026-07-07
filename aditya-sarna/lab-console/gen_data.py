@@ -75,7 +75,7 @@ def parse_ping_directions(ping):
 
 
 REPO_URL = "https://github.com/Aditya-Sarna/opi-assignment-2-ovs"
-CI_RUN_URL = "https://github.com/Aditya-Sarna/opi-assignment-2-ovs/actions/runs/28830867232"
+CI_RUN_URL = "https://github.com/Aditya-Sarna/opi-assignment-2-ovs/actions/runs/28868065521"
 ASSIGNMENT_REPO_URL = "https://github.com/sknrao/opi-assignment-2-2026"
 
 

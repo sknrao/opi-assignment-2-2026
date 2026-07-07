@@ -251,7 +251,7 @@ window.APP_DATA = {
   },
   "links": {
     "repo": "https://github.com/Aditya-Sarna/opi-assignment-2-ovs",
-    "ci": "https://github.com/Aditya-Sarna/opi-assignment-2-ovs/actions/runs/28830867232",
+    "ci": "https://github.com/Aditya-Sarna/opi-assignment-2-ovs/actions/runs/28868065521",
     "diagram": "https://raw.githubusercontent.com/Aditya-Sarna/opi-assignment-2-ovs/main/diagrams/implemented_software_datapath_topology.png",
     "submit": "https://github.com/Aditya-Sarna/opi-assignment-2-ovs/blob/main/SUBMIT.md",
     "assignment": "https://github.com/sknrao/opi-assignment-2-2026"
