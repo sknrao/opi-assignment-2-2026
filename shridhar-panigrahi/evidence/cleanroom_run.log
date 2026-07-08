@@ -1,0 +1,74 @@
+==> 1/7 KinD cluster 'opi-ovs'
+Creating cluster "opi-ovs" ...
+ • Ensuring node image (kindest/node:v1.36.1) 🖼  ...
+ ✓ Ensuring node image (kindest/node:v1.36.1) 🖼
+ • Preparing nodes 📦   ...
+ ✓ Preparing nodes 📦 
+ • Writing configuration 📜  ...
+ ✓ Writing configuration 📜
+ • Starting control-plane 🕹️  ...
+ ✓ Starting control-plane 🕹️
+ • Installing CNI 🔌  ...
+ ✓ Installing CNI 🔌
+ • Installing StorageClass 💾  ...
+ ✓ Installing StorageClass 💾
+Set kubectl context to "kind-opi-ovs"
+You can now use your cluster with:
+
+kubectl cluster-info --context kind-opi-ovs
+
+Have a question, bug, or feature request? Let us know! https://kind.sigs.k8s.io/#community 🙂
+==> 2/7 Multus CNI (thick plugin)
+customresourcedefinition.apiextensions.k8s.io/network-attachment-definitions.k8s.cni.cncf.io created
+clusterrole.rbac.authorization.k8s.io/multus created
+clusterrolebinding.rbac.authorization.k8s.io/multus created
+serviceaccount/multus created
+configmap/multus-daemon-config created
+daemonset.apps/kube-multus-ds created
+==> 3/7 KubeVirt v1.8.4 with emulation and the Sidecar feature gate
+namespace/kubevirt created
+customresourcedefinition.apiextensions.k8s.io/kubevirts.kubevirt.io created
+priorityclass.scheduling.k8s.io/kubevirt-cluster-critical created
+clusterrole.rbac.authorization.k8s.io/kubevirt.io:operator created
+serviceaccount/kubevirt-operator created
+role.rbac.authorization.k8s.io/kubevirt-operator created
+rolebinding.rbac.authorization.k8s.io/kubevirt-operator-rolebinding created
+clusterrole.rbac.authorization.k8s.io/kubevirt-operator created
+clusterrolebinding.rbac.authorization.k8s.io/kubevirt-operator created
+Warning: spec.template.spec.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[1].matchExpressions[0].key: node-role.kubernetes.io/master is use "node-role.kubernetes.io/control-plane" instead
+deployment.apps/virt-operator created
+kubevirt.kubevirt.io/kubevirt created
+kubevirt.kubevirt.io/kubevirt patched
+==> 4/7 Open vSwitch inside the KinD node, bridge br1
+debconf: unable to initialize frontend: Dialog
+debconf: (TERM is not set, so the dialog frontend is not usable.)
+debconf: falling back to frontend: Readline
+debconf: unable to initialize frontend: Readline
+debconf: (Can't locate Term/ReadLine.pm in @INC (you may need to install the Term::ReadLine module) (@INC entries checked: /etc/perl /usr/local/lib/aarch64-linux-gnu/perl/5.40.1 /usr/local/share/perl/5.40.1 /usr/lib/aarch64-linux-gnu/perl5/5.40 /usr/share/perl5 /usr/lib/aarch64-linux-gnu/perl-base /usr/lib/aarch64-linux-gnu/perl/5.40 /usr/share/perl/5.40 /usr/local/lib/site_perl) at /usr/share/perl5/Debconf/FrontEnd/Readline.pm line 8, <STDIN> line 31.)
+debconf: falling back to frontend: Teletype
+debconf: unable to initialize frontend: Teletype
+debconf: (This frontend requires a controlling tty.)
+debconf: falling back to frontend: Noninteractive
+ee861b8e-c268-4092-bcd3-94e38349116a
+    Bridge br1
+        Port br1
+            Interface br1
+                type: internal
+    ovs_version: "3.5.0"
+==> 5/7 ovs-cni v0.39.0 (corrected manifest)
+serviceaccount/ovs-cni-marker created
+clusterrole.rbac.authorization.k8s.io/ovs-cni-marker-cr created
+clusterrolebinding.rbac.authorization.k8s.io/ovs-cni-marker-crb created
+daemonset.apps/ovs-cni created
+==> 6/7 CirrOS 0.6.3 container disk for this architecture
+sha256:a6f239443857c9f53da8d40aee380a4cd494293fc6a9eee45c73dd6a736051c2
+Image: "cirros-arm64-containerdisk:0.6.3" with ID "sha256:a6f239443857c9f53da8d40aee380a4cd494293fc6a9eee45c73dd6a736051c2" not yet present on node "opi-ovs-control-plane", loading...
+==> 7/7 waiting for everything to come up
+kubevirt.kubevirt.io/kubevirt condition met
+daemon set "ovs-cni" successfully rolled out
+daemon set "kube-multus-ds" successfully rolled out
+
+Done. The node should now advertise the OVS bridge as a resource:
+"ovs-cni.network.kubevirt.io/br1":"1k"
+
+Next: kubectl apply -f manifests.yaml

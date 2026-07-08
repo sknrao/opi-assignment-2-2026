@@ -1,0 +1,27 @@
+#!/usr/bin/expect -f
+# Drive a ping from inside vm-a over the OVS bridge, via the serial console.
+set timeout 120
+spawn virtctl console vm-a
+expect {
+    "Successfully connected" { send "\r" }
+    timeout { puts "NO_CONSOLE"; exit 1 }
+}
+expect {
+    -re "login:" { send "cirros\r" }
+    -re "\\$ $" { send "ping -c 30 10.10.10.12\r"; exp_continue }
+    timeout { puts "NO_LOGIN_PROMPT"; exit 1 }
+}
+expect {
+    "Password:" { send "gocubsgo\r" }
+    timeout { puts "NO_PASSWORD_PROMPT"; exit 1 }
+}
+expect {
+    -re "\\$ $" { send "ping -c 30 10.10.10.12\r" }
+    timeout { puts "NO_SHELL"; exit 1 }
+}
+expect {
+    "packet loss" { puts "\nPING_DONE" }
+    timeout { puts "PING_TIMEOUT"; exit 1 }
+}
+send "\035"
+exit 0
