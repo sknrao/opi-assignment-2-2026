@@ -1,0 +1,65 @@
+---
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: ovs-net
+  namespace: default
+spec:
+  config: |
+    {
+      "cniVersion": "0.3.1",
+      "name": "ovs-net",
+      "type": "ovs",
+      "bridge": "br-ovs",
+      "mtu": 1500,
+      "ipam": {
+        "type": "whereabouts",
+        "range": "192.168.100.0/24",
+        "exclude": ["192.168.100.1/32"],
+        "gateway": "192.168.100.1"
+      }
+    }
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: cirros-ovs
+  namespace: default
+  labels:
+    app: cirros-ovs
+spec:
+  running: true
+  template:
+    metadata:
+      labels:
+        app: cirros-ovs
+        kubevirt.io/domain: cirros-ovs
+    spec:
+      domain:
+        devices:
+          disks:
+            - name: containerdisk
+              disk:
+                bus: virtio
+          interfaces:
+            - name: default
+              masquerade: {}
+            - name: ovs-net
+              bridge: {}
+        resources:
+          requests:
+            memory: 256Mi
+            cpu: "0.25"
+          limits:
+            memory: 256Mi
+            cpu: "0.25"
+      networks:
+        - name: default
+          pod: {}
+        - name: ovs-net
+          multus:
+            networkName: ovs-net
+      volumes:
+        - name: containerdisk
+          containerDisk:
+            image: quay.io/kubevirt/cirros-container-disk-demo:v1.8.4
