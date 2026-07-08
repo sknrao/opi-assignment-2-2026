@@ -1,0 +1,1 @@
+{  "bridge": "br1",  "ovs_version": "2.17.9",  "flows": [    {      "cookie": "0x0",      "table": 0,      "n_packets": 261,      "n_bytes": 20562,      "priority": 0,      "actions": "NORMAL"    }  ]}
