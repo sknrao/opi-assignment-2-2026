@@ -1,0 +1,18 @@
+PING 192.168.100.10 (192.168.100.10) 56(84) bytes of data.
+64 bytes from 192.168.100.10: icmp_seq=1 ttl=64 time=8.36 ms
+64 bytes from 192.168.100.10: icmp_seq=2 ttl=64 time=13.3 ms
+64 bytes from 192.168.100.10: icmp_seq=3 ttl=64 time=9.18 ms
+64 bytes from 192.168.100.10: icmp_seq=4 ttl=64 time=10.7 ms
+
+--- 192.168.100.10 ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 3017ms
+rtt min/avg/max/mdev = 8.357/10.393/13.299/1.883 ms
+
+PING 192.168.100.1 (192.168.100.1): 56 data bytes
+64 bytes from 192.168.100.1: seq=0 ttl=64 time=13.171 ms
+64 bytes from 192.168.100.1: seq=1 ttl=64 time=75.225 ms
+64 bytes from 192.168.100.1: seq=2 ttl=64 time=21.324 ms
+64 bytes from 192.168.100.1: seq=3 ttl=64 time=10.445 ms
+--- 192.168.100.1 ping statistics ---
+4 packets transmitted, 4 packets received, 0% packet loss
+round-trip min/avg/max = 10.445/30.041/75.225 ms

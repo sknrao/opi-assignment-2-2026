@@ -1,0 +1,8 @@
+{
+  "bridge": "ovs-br0",
+  "flows": [
+    {
+      "raw": "cookie=0x0, duration=5138.915s, table=0, n_packets=124, n_bytes=10836, priority=0 actions=NORMAL"
+    }
+  ]
+}

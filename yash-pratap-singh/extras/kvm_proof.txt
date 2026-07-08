@@ -1,0 +1,17 @@
+asus1@LAPTOP-9HPPRN5U:~$ cat kvm_proof.txt
+
+=== Host WSL ===
+crw-rw---- 1 root kvm 10, 232 Jul  6 07:22 /dev/kvm
+vmx flag count: 44
+=== Minikube node ===
+crw-rw---- 1 root kvm 10, 232 Jul  6 07:14 /dev/kvm
+=== KubeVirt emulation config (empty = real KVM required) ===
+(no emulation config — real KVM required)
+
+asus1@LAPTOP-9HPPRN5U:~$ POD=$(kubectl get pods -o name | grep virt-launcher-vm-alpha | head -1)
+echo "accel flag: $(kubectl exec $POD -- ps -ef | grep -oE '\-accel [a-z]+' | head -1)"
+echo "useEmulation: $(kubectl -n kubevirt get kubevirt kubevirt -o jsonpath='{.spec.configuration.developerConfiguration.useEmulation}')"
+
+accel flag: -accel kvm
+useEmulation:
+asus1@LAPTOP-9HPPRN5U:~$

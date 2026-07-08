@@ -1,0 +1,165 @@
+# =============================================================================
+#  manifests.yaml — OVS + KubeVirt datapath lab
+# =============================================================================
+#  Contains exactly two objects:
+#
+#    [1] NetworkAttachmentDefinition  "ovs-net"
+#        -> read by Multus; tells ovs-cni which bridge/VLAN to plumb a
+#           secondary pod/VMI interface into.
+#
+#    [2] VirtualMachine  "${OVS_VM_NAME}"
+#        -> CirrOS, dual-homed: pod network (masquerade) + OVS secondary
+#           network (bridge binding, via the NAD above).
+#
+#  This file is a template, not a ready-to-apply manifest: it contains
+#  ${VAR}-style placeholders that cluster_setup.sh fills in via `envsubst`
+#  at apply time (see its Step 8). Applying it by hand instead:
+#
+#      export OVS_BRIDGE_NAME=br-ovs \
+#             OVS_VLAN=100 \
+#             OVS_VM_NAME=cirros-ovs-vm \
+#             OVS_VM_IP=192.168.100.10
+#      envsubst < manifests.yaml | kubectl apply -f -
+# =============================================================================
+
+# --------------------------- [1] NetworkAttachmentDefinition ----------------
+#
+# Why no `resourceName` annotation: that annotation exists for device-plugin
+# -backed, capacity-limited resources (SR-IOV VFs, or ovs-cni-marker's
+# tracked bridge ports, when the scheduler needs to count availability per
+# node). A plain bridge attachment like this one carries no such capacity
+# constraint, so Multus invokes ovs-cni directly on pod admission with no
+# accounting gate — that's the correct, expected behavior here, not a gap.
+#
+# Why `"ipam": {}` (empty): addressing for the OVS-side interface happens
+# inside the guest via cloud-init instead (see the VM's userData below), so
+# multiple VMs sharing this NAD don't collide on one IPAM pool — KinD's
+# node-local `host-local` IPAM has no cross-VM lease coordination in this
+# topology.
+# ------------------------------------------------------------------------------
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: ovs-net
+  namespace: default
+spec:
+  config: |
+    {
+      "cniVersion": "0.4.0",
+      "name": "ovs-net",
+      "type": "ovs",
+      "bridge": "${OVS_BRIDGE_NAME}",
+      "vlan": ${OVS_VLAN},
+      "mtu": 1500,
+      "ipam": {}
+    }
+
+---
+# ------------------------------- [2] VirtualMachine --------------------------
+#
+# Image delivery: `containerDisk`, not a CDI `DataVolume`.
+#   DataVolume needs the CDI (Containerized Data Importer) operator running
+#   alongside KubeVirt as a separate component; cluster_setup.sh doesn't
+#   install it, since it's unnecessary surface area for one ~14 MiB CirrOS
+#   image. containerDisk needs nothing beyond KubeVirt: the image is an OCI
+#   container whose filesystem holds the raw/qcow2 disk, extracted by
+#   virt-launcher at VM start. Trade-off, worth knowing before reusing this
+#   pattern for a large image: it re-pulls/re-extracts on every VM restart
+#   rather than caching in a PVC.
+#
+# machine.type: q35, not the legacy default.
+#   q35 supports PCIe/IOMMU, which is what an SR-IOV/vDPA interface binding
+#   would need later (see dpu_offload_concept.md, Part II) — using it now
+#   keeps this spec forward-compatible with that hardware-offload path
+#   without a rewrite.
+#
+# cpu.model: host-model, not host-passthrough.
+#   host-model abstracts exact CPU feature flags so the spec stays
+#   migration-safe across hosts with slightly different CPUs.
+#   host-passthrough would expose exact flags and break migration to a
+#   different CPU. Irrelevant under TCG emulation (no /dev/kvm) — QEMU
+#   ignores the requested model there regardless.
+# ------------------------------------------------------------------------------
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: ${OVS_VM_NAME}
+  namespace: default
+  labels:
+    app: ${OVS_VM_NAME}
+spec:
+  running: true
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: ${OVS_VM_NAME}
+      annotations:
+        # Triggers Multus -> ovs-cni for interface [ovsnet] below.
+        k8s.v1.cni.cncf.io/networks: ovs-net
+    spec:
+      # Lab-only: single-node ping test needs no live migration, and CirrOS
+      # has nothing worth draining, so skip the default 30s grace period.
+      evictionStrategy: None
+      terminationGracePeriodSeconds: 5
+
+      domain:
+        machine:
+          type: q35
+        cpu:
+          cores: 1
+          model: host-model
+        resources:
+          requests:
+            memory: 256Mi
+          limits:
+            memory: 512Mi
+
+        devices:
+          disks:
+            - name: cirros-disk
+              disk:
+                bus: virtio
+            - name: cloudinitdisk
+              disk:
+                bus: virtio
+
+          # `interfaces` entries below are matched to `networks` entries by
+          # `name:`, not by list position — KubeVirt resolves the pairing
+          # by name. Kept in the same order in both lists purely for
+          # readability, not because ordering is load-bearing.
+          interfaces:
+            - name: default          # pod network: egress/DNS, NATed via pod IP
+              masquerade: {}
+              model: virtio
+            - name: ovsnet           # OVS secondary network (bridge binding)
+              bridge: {}
+              model: virtio
+
+      networks:
+        - name: default
+          pod: {}
+        - name: ovsnet
+          multus:
+            networkName: ovs-net
+
+      volumes:
+        - name: cirros-disk
+          containerDisk:
+            image: quay.io/kubevirt/cirros-container-disk-demo:v1.2.0
+
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            # CAUTION, easy mistake to repeat from Ubuntu/Debian examples:
+            # CirrOS's cloud-init datasource is minimal and does NOT
+            # understand #cloud-config YAML modules (write_files, packages,
+            # runcmd, etc). It only runs a literal shell script, and only if
+            # userData begins with the `#!` shebang below. A #cloud-config
+            # block here would be silently ignored on CirrOS.
+            userData: |
+              #!/bin/sh
+              # Default CirrOS login: cirros / gocubsgo (left as-is —
+              # BusyBox on CirrOS has no chpasswd to change it with).
+              ip link set eth1 up
+              ip addr add ${OVS_VM_IP}/24 dev eth1
+              ip addr show eth0
+              ip addr show eth1

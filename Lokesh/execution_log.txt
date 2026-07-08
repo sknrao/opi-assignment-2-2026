@@ -1,0 +1,113 @@
+./cluster_setup.sh
+
+==> 0/11 Checking prerequisites
+[INFO ] ✔ docker found: Docker version 29.1.3, build 29.1.3-0ubuntu3~24.04.2
+[INFO ] ✔ kubectl found: error: unknown flag: --version
+[INFO ] ✔ kind found: kind version 0.24.0
+[INFO ] ✔ jq found: jq-1.7
+[INFO ] ✔ curl found: curl 8.5.0 (x86_64-pc-linux-gnu) libcurl/8.5.0 OpenSSL/3.0.13 zlib/1.3 brotli/1.1.0 zstd/1.5.5 libidn2/2.3.7 libpsl/0.21.2 (+libidn2/2.3.7) libssh/0.10.6/openssl/zlib nghttp2/1.59.0 librtmp/2.3 OpenLDAP/2.6.7
+[INFO ] ✔ expect found: couldn't read file "--version": no such file or directory
+[INFO ] ✔ python3 found: Python 3.12.3
+[INFO ] ✔ /dev/kvm available — KubeVirt will use hardware-accelerated virtualization.
+[INFO ] ✔ inotify limits OK (watches=1048576, instances=8192).
+
+==> 1/11 Creating KinD cluster 'ovs-dpu-lab' (v1.30.0)
+[WARN ] Cluster 'ovs-dpu-lab' already exists — reusing it. Delete first for a clean run:
+[WARN ]   kind delete cluster --name ovs-dpu-lab
+[INFO ] ✔ kubectl context: kind-ovs-dpu-lab
+[INFO ] ✔ Worker node (where the VM + OVS bridge will live): ovs-dpu-lab-worker
+[INFO ] Installing standard CNI plugin binaries on all nodes...
+[INFO ] ✔ CNI plugin binaries present.
+
+==> 2/11 Installing Flannel (primary CNI, v0.25.1)
+namespace/kube-flannel unchanged
+clusterrole.rbac.authorization.k8s.io/flannel unchanged
+clusterrolebinding.rbac.authorization.k8s.io/flannel unchanged
+serviceaccount/flannel unchanged
+configmap/kube-flannel-cfg unchanged
+daemonset.apps/kube-flannel-ds unchanged
+daemon set "kube-flannel-ds" successfully rolled out
+pod/coredns-7db6d8ff4d-4znzs condition met
+pod/coredns-7db6d8ff4d-5vfls condition met
+[INFO ] ✔ Flannel Ready, CoreDNS Ready.
+
+==> 3/11 Installing Multus CNI (v4.0.2, thick plugin)
+customresourcedefinition.apiextensions.k8s.io/network-attachment-definitions.k8s.cni.cncf.io unchanged
+clusterrole.rbac.authorization.k8s.io/multus unchanged
+clusterrolebinding.rbac.authorization.k8s.io/multus unchanged
+serviceaccount/multus unchanged
+configmap/multus-daemon-config unchanged
+daemonset.apps/kube-multus-ds configured
+daemon set "kube-multus-ds" successfully rolled out
+[INFO ] ✔ Multus Ready, NetworkAttachmentDefinition CRD present.
+
+==> 4/11 Installing Open vSwitch inside KinD nodes, creating br-ovs
+[INFO ]   Configuring OVS on node: ovs-dpu-lab-worker
+ovsdb-server is already running.
+ovs-vswitchd is already running.
+Enabling remote OVSDB managers.
+[INFO ]   Configuring OVS on node: ovs-dpu-lab-control-plane
+ovsdb-server is already running.
+ovs-vswitchd is already running.
+Enabling remote OVSDB managers.
+[INFO ] ✔ br-ovs up on all nodes, VLAN 100, host IP 192.168.100.1/24 on the worker.
+
+==> 5/11 Installing ovs-cni (v0.38.0)
+daemonset.apps/ovs-cni-amd64 unchanged
+clusterrole.rbac.authorization.k8s.io/ovs-cni-marker-cr unchanged
+clusterrolebinding.rbac.authorization.k8s.io/ovs-cni-marker-crb unchanged
+serviceaccount/ovs-cni-marker unchanged
+[INFO ] Probing ovs-cni with a throwaway pod...
+networkattachmentdefinition.k8s.cni.cncf.io/probe-net unchanged
+pod/ovs-cni-probe created
+pod/ovs-cni-probe condition met
+[INFO ] ✔ ovs-cni verified end-to-end with a throwaway pod.
+
+==> 6/11 Installing KubeVirt (v1.3.0)
+namespace/kubevirt unchanged
+customresourcedefinition.apiextensions.k8s.io/kubevirts.kubevirt.io unchanged
+priorityclass.scheduling.k8s.io/kubevirt-cluster-critical configured
+clusterrole.rbac.authorization.k8s.io/kubevirt.io:operator unchanged
+serviceaccount/kubevirt-operator unchanged
+role.rbac.authorization.k8s.io/kubevirt-operator unchanged
+rolebinding.rbac.authorization.k8s.io/kubevirt-operator-rolebinding unchanged
+clusterrole.rbac.authorization.k8s.io/kubevirt-operator unchanged
+clusterrolebinding.rbac.authorization.k8s.io/kubevirt-operator unchanged
+deployment.apps/virt-operator configured
+deployment "virt-operator" successfully rolled out
+kubevirt.kubevirt.io/kubevirt unchanged
+[INFO ] Waiting for KubeVirt phase=Deployed (can take several minutes)...
+[INFO ] ✔ KubeVirt phase: Deployed
+deployment "virt-api" successfully rolled out
+deployment "virt-controller" successfully rolled out
+daemon set "virt-handler" successfully rolled out
+[INFO ] ✔ virt-api, virt-controller, virt-handler all Ready.
+
+==> 7/11 Installing virtctl
+[INFO ] ✔ virtctl: Client Version: version.Info{GitVersion:"v1.3.0", GitCommit:"6a4481910c353dc43be36fd1c9a4444ad701d0b7", GitTreeState:"clean", BuildDate:"2024-07-17T15:19:15Z", GoVersion:"go1.22.2 X:nocoverageredesign", Compiler:"gc", Platform:"linux/amd64"}
+
+==> 8/11 Applying manifests.yaml
+networkattachmentdefinition.k8s.cni.cncf.io/ovs-net unchanged
+virtualmachine.kubevirt.io/cirros-ovs-vm created
+[INFO ] ✔ NetworkAttachmentDefinition + VirtualMachine applied.
+
+==> 9/11 Waiting for VMI 'cirros-ovs-vm' to reach Running
+[INFO ]   VMI phase: Scheduling (10s/600s)
+[INFO ]   VMI phase: Scheduling (20s/600s)
+[INFO ]   VMI phase: Scheduling (30s/600s)
+[INFO ]   VMI phase: Scheduling (40s/600s)
+[INFO ]   VMI phase: Scheduling (50s/600s)
+[INFO ]   VMI phase: Scheduling (60s/600s)
+[INFO ] ✔ VMI phase: Running
+
+==> 10/11 Bidirectional ping verification (real VM, no synthetic fallback)
+[INFO ] Direction 1/2: HOST -> VM (from the worker node, over br-ovs)
+[INFO ] Direction 2/2: VM -> HOST (via virtctl console, real guest shell)
+[INFO ] ping_results.txt written to /home/l/Code/LFX/opi-assignment-2-2026/Lokesh/output/ping_results.txt
+
+==> 11/11 Capturing OVS flow table as verification_flows.json
+[INFO ] ✔ verification_flows.json written to /home/l/Code/LFX/opi-assignment-2-2026/Lokesh/output/verification_flows.json
+
+[INFO ] ALL VERIFICATION PASSED (host->VM and VM->host both confirmed 0% packet loss).
+[INFO ] Cluster: ovs-dpu-lab | KubeVirt: v1.3.0 | Multus: v4.0.2 | ovs-cni: v0.38.0
+[INFO ] Outputs: /home/l/Code/LFX/opi-assignment-2-2026/Lokesh/output/ping_results.txt , /home/l/Code/LFX/opi-assignment-2-2026/Lokesh/output/verification_flows.json

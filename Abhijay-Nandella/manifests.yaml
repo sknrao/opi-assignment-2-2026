@@ -1,0 +1,348 @@
+# Kubernetes resources for deploying KubeVirt virtual machines on an
+# Open vSwitch-backed secondary network using Multus and the OVS CNI.
+# Total 4 VM's
+# 3 clients and 1 server
+# OVS Network
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: vm-ovs-network
+  namespace: test-lab
+spec:
+  config: '{
+      "cniVersion": "0.3.1",
+      "type": "ovs",
+      "bridge": "SW-bridge"
+    }'
+---
+# CirrOS Client 1
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: cirros-client-1
+  namespace: test-lab
+spec:
+  runStrategy: Always
+  dataVolumeTemplates:
+    - metadata:
+        name: cirros-client-1-rootdisk
+      spec:
+        source:
+          http:
+            url: "https://download.cirros-cloud.net/0.6.3/cirros-0.6.3-x86_64-disk.img"
+        storage:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 1Gi
+          storageClassName: standard
+          volumeMode: Filesystem
+  template:
+    metadata:
+      labels:
+        kubevirt.io/vm: cirros-client-1
+    spec:
+      terminationGracePeriodSeconds: 5
+      domain:
+        machine:
+          type: q35
+        cpu:
+          cores: 1
+        resources:
+          requests:
+            
+            memory: 512Mi
+        devices:
+          rng: {}
+          disks:
+            - name: rootdisk
+              disk:
+                bus: virtio
+            - name: cloudinitdisk
+              disk:
+                bus: virtio
+          interfaces:
+            - name: default
+              masquerade: {}
+            - name: secondary
+              bridge: {}
+      networks:
+        - name: default
+          pod: {}
+        - name: secondary
+          multus:
+            networkName: test-lab/vm-ovs-network
+      volumes:
+        - name: rootdisk
+          dataVolume:
+            name: cirros-client-1-rootdisk
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |
+              #cloud-config
+              hostname: cirros-client-1
+              users:
+                - default
+                - name: cirros
+                  sudo: ALL=(ALL) NOPASSWD:ALL
+                  lock_passwd: false
+              chpasswd:
+                list: |
+                  cirros:cirros
+                expire: false
+            networkData: |
+              version: 2
+              ethernets:
+                eth1:
+                  addresses:
+                    - 10.10.0.10/24
+---
+# CirrOS Client 2
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: cirros-client-2
+  namespace: test-lab
+spec:
+  runStrategy: Always
+  dataVolumeTemplates:
+    - metadata:
+        name: cirros-client-2-rootdisk
+      spec:
+        source:
+          http:
+            url: "https://download.cirros-cloud.net/0.6.3/cirros-0.6.3-x86_64-disk.img"
+        storage:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 1Gi
+          storageClassName: standard
+          volumeMode: Filesystem
+  template:
+    metadata:
+      labels:
+        kubevirt.io/vm: cirros-client-2
+    spec:
+      terminationGracePeriodSeconds: 5
+      domain:
+        machine:
+          type: q35
+        cpu:
+          cores: 1
+        resources:
+          requests:
+            
+            memory: 512Mi
+        devices:
+          rng: {}
+          disks:
+            - name: rootdisk
+              disk:
+                bus: virtio
+            - name: cloudinitdisk
+              disk:
+                bus: virtio
+          interfaces:
+            - name: default
+              masquerade: {}
+            - name: secondary
+              bridge: {}
+      networks:
+        - name: default
+          pod: {}
+        - name: secondary
+          multus:
+            networkName: test-lab/vm-ovs-network
+      volumes:
+        - name: rootdisk
+          dataVolume:
+            name: cirros-client-2-rootdisk
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |
+              #cloud-config
+              hostname: cirros-client-2
+              users:
+                - default
+                - name: cirros
+                  sudo: ALL=(ALL) NOPASSWD:ALL
+                  lock_passwd: false
+              chpasswd:
+                list: |
+                  cirros:cirros
+                expire: false
+            networkData: |
+              version: 2
+              ethernets:
+                eth1:
+                  addresses:
+                    - 10.10.0.11/24
+---
+# CirrOS Client 3
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: cirros-client-3
+  namespace: test-lab
+spec:
+  runStrategy: Always
+  dataVolumeTemplates:
+    - metadata:
+        name: cirros-client-3-rootdisk
+      spec:
+        source:
+          http:
+            url: "https://download.cirros-cloud.net/0.6.3/cirros-0.6.3-x86_64-disk.img"
+        storage:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 1Gi
+          storageClassName: standard
+          volumeMode: Filesystem
+  template:
+    metadata:
+      labels:
+        kubevirt.io/vm: cirros-client-3
+    spec:
+      terminationGracePeriodSeconds: 5
+      domain:
+        machine:
+          type: q35
+        cpu:
+          cores: 1
+        resources:
+          requests:
+            
+            memory: 512Mi
+        devices:
+          rng: {}
+          disks:
+            - name: rootdisk
+              disk:
+                bus: virtio
+            - name: cloudinitdisk
+              disk:
+                bus: virtio
+          interfaces:
+            - name: default
+              masquerade: {}
+            - name: secondary
+              bridge: {}
+      networks:
+        - name: default
+          pod: {}
+        - name: secondary
+          multus:
+            networkName: test-lab/vm-ovs-network
+      volumes:
+        - name: rootdisk
+          dataVolume:
+            name: cirros-client-3-rootdisk
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |
+              #cloud-config
+              hostname: cirros-client-3
+              users:
+                - default
+                - name: cirros
+                  sudo: ALL=(ALL) NOPASSWD:ALL
+                  lock_passwd: false
+              chpasswd:
+                list: |
+                  cirros:cirros
+                expire: false
+            networkData: |
+              version: 2
+              ethernets:
+                eth1:
+                  addresses:
+                    - 10.10.0.12/24
+---
+# CirrOS Server 
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: cirros-server
+  namespace: test-lab
+spec:
+  runStrategy: Always
+  dataVolumeTemplates:
+    - metadata:
+        name: cirros-server-rootdisk
+      spec:
+        source:
+          http:
+            url: "https://download.cirros-cloud.net/0.6.3/cirros-0.6.3-x86_64-disk.img"
+        storage:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 1Gi
+          storageClassName: standard
+          volumeMode: Filesystem
+  template:
+    metadata:
+      labels:
+        kubevirt.io/vm: cirros-server
+    spec:
+      terminationGracePeriodSeconds: 5
+      domain:
+        machine:
+          type: q35
+        cpu:
+          cores: 1
+        resources:
+          requests:
+            
+            memory: 512Mi
+        devices:
+          rng: {}
+          disks:
+            - name: rootdisk
+              disk:
+                bus: virtio
+            - name: cloudinitdisk
+              disk:
+                bus: virtio
+          interfaces:
+            - name: default
+              masquerade: {}
+            - name: secondary
+              bridge: {}
+      networks:
+        - name: default
+          pod: {}
+        - name: secondary
+          multus:
+            networkName: test-lab/vm-ovs-network
+      volumes:
+        - name: rootdisk
+          dataVolume:
+            name: cirros-server-rootdisk
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |
+              #cloud-config
+              hostname: cirros-server
+              users:
+                - default
+                - name: cirros
+                  sudo: ALL=(ALL) NOPASSWD:ALL
+                  lock_passwd: false
+              chpasswd:
+                list: |
+                  cirros:cirros
+                expire: false
+            networkData: |
+              version: 2
+              ethernets:
+                eth1:
+                  addresses:
+                    - 10.10.0.13/24

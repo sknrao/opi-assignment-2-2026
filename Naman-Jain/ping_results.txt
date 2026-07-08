@@ -1,0 +1,10 @@
+$ ping -c 4 10.244.0.1
+PING 10.244.0.1 (10.244.0.1): 56 data bytes
+64 bytes from 10.244.0.1: seq=0 ttl=63 time=0.161 ms
+64 bytes from 10.244.0.1: seq=1 ttl=63 time=0.249 ms
+64 bytes from 10.244.0.1: seq=2 ttl=63 time=0.166 ms
+64 bytes from 10.244.0.1: seq=3 ttl=63 time=0.137 ms
+
+--- 10.244.0.1 ping statistics ---
+4 packets transmitted, 4 packets received, 0% packet loss
+round-trip min/avg/max = 0.137/0.178/0.249 ms

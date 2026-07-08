@@ -1,0 +1,45 @@
+[
+  {
+    "cookie": 0,
+    "duration": 14.361,
+    "table": 0,
+    "n_packets": 9,
+    "n_bytes": 882,
+    "idle_age": 1,
+    "priority": 100,
+    "match": "ip,nw_src=192.168.100.1",
+    "actions": "NORMAL"
+  },
+  {
+    "cookie": 0,
+    "duration": 14.258,
+    "table": 0,
+    "n_packets": 9,
+    "n_bytes": 882,
+    "idle_age": 1,
+    "priority": 100,
+    "match": "ip,nw_src=192.168.100.2",
+    "actions": "NORMAL"
+  },
+  {
+    "cookie": 0,
+    "duration": 14.13,
+    "table": 0,
+    "n_packets": 4,
+    "n_bytes": 168,
+    "idle_age": 6,
+    "priority": 90,
+    "match": "arp",
+    "actions": "NORMAL"
+  },
+  {
+    "cookie": 0,
+    "duration": 14.01,
+    "table": 0,
+    "n_packets": 4,
+    "n_bytes": 280,
+    "idle_age": 2,
+    "priority": 0,
+    "actions": "NORMAL"
+  }
+]

@@ -1,0 +1,117 @@
+# All custom resources for the OVS datapath demo:
+#   1. a NetworkAttachmentDefinition that hands Multus off to the OVS-CNI plugin,
+#      attaching workloads to the "br1" Open vSwitch bridge created on the node;
+#   2. two CirrOS KubeVirt VirtualMachines, each with a default (pod) interface and
+#      a secondary interface on the OVS network, with static IPs in 10.10.0.0/24 so
+#      they can ping each other purely across the OVS bridge.
+#
+# Apply after the stack is installed:  kubectl apply -f manifests.yaml
+---
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: ovs-net
+  namespace: default
+spec:
+  # type "ovs" + bridge "br1" must match the bridge cluster_setup.sh creates on the
+  # node. No VLAN tag: both VMs share one flat L2 domain on the bridge.
+  config: '{
+      "cniVersion": "0.4.0",
+      "type": "ovs",
+      "bridge": "br1"
+    }'
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: cirros-vm1
+  namespace: default
+spec:
+  running: true
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: cirros-vm1
+    spec:
+      domain:
+        devices:
+          disks:
+            - name: containerdisk
+              disk:
+                bus: virtio
+            - name: cloudinitdisk
+              disk:
+                bus: virtio
+          interfaces:
+            - name: default
+              masquerade: {}          # eth0: pod network (SSH/console reachability)
+            - name: ovs
+              bridge: {}              # eth1: Open vSwitch secondary network
+              macAddress: "02:00:00:00:00:01"
+        resources:
+          requests:
+            memory: 256Mi
+      networks:
+        - name: default
+          pod: {}
+        - name: ovs
+          multus:
+            networkName: ovs-net
+      volumes:
+        - name: containerdisk
+          containerDisk:
+            image: quay.io/kubevirt/cirros-container-disk-demo
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            # CirrOS runs this userdata script at boot; bring up eth1 with a static IP.
+            userData: |
+              #!/bin/sh
+              sudo ip addr add 10.10.0.1/24 dev eth1
+              sudo ip link set eth1 up
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: cirros-vm2
+  namespace: default
+spec:
+  running: true
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: cirros-vm2
+    spec:
+      domain:
+        devices:
+          disks:
+            - name: containerdisk
+              disk:
+                bus: virtio
+            - name: cloudinitdisk
+              disk:
+                bus: virtio
+          interfaces:
+            - name: default
+              masquerade: {}
+            - name: ovs
+              bridge: {}
+              macAddress: "02:00:00:00:00:02"
+        resources:
+          requests:
+            memory: 256Mi
+      networks:
+        - name: default
+          pod: {}
+        - name: ovs
+          multus:
+            networkName: ovs-net
+      volumes:
+        - name: containerdisk
+          containerDisk:
+            image: quay.io/kubevirt/cirros-container-disk-demo
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |
+              #!/bin/sh
+              sudo ip addr add 10.10.0.2/24 dev eth1
+              sudo ip link set eth1 up

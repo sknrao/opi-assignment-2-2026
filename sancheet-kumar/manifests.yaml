@@ -1,0 +1,76 @@
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: ovs-net
+spec:
+  config: '{
+      "cniVersion": "0.3.1",
+      "type": "ovs",
+      "bridge": "br1"
+    }'
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-a
+spec:
+  running: true
+  template:
+    spec:
+      domain:
+        resources:
+          requests:
+            memory: 256Mi
+        devices:
+          interfaces:
+          - name: default
+            masquerade: {}
+          - name: ovs-if
+            bridge: {}
+          disks:
+          - name: containerdisk
+            disk:
+              bus: virtio
+      networks:
+      - name: default
+        pod: {}
+      - name: ovs-if
+        multus:
+          networkName: ovs-net
+      volumes:
+      - name: containerdisk
+        containerDisk:
+          image: quay.io/kubevirt/cirros-container-disk-demo:latest
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-b
+spec:
+  running: true
+  template:
+    spec:
+      domain:
+        resources:
+          requests:
+            memory: 256Mi
+        devices:
+          interfaces:
+          - name: default
+            masquerade: {}
+          - name: ovs-if
+            bridge: {}
+          disks:
+          - name: containerdisk
+            disk:
+              bus: virtio
+      networks:
+      - name: default
+        pod: {}
+      - name: ovs-if
+        multus:
+          networkName: ovs-net
+      volumes:
+      - name: containerdisk
+        containerDisk:
+          image: quay.io/kubevirt/cirros-container-disk-demo:latest

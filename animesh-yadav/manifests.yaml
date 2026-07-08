@@ -1,0 +1,44 @@
+---
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: ovs-net
+spec:
+  config: '{
+      "cniVersion": "0.3.1",
+      "type": "ovs",
+      "bridge": "br-int"
+    }'
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: cirros-vm
+spec:
+  running: true
+  template:
+    spec:
+      domain:
+        resources:
+          requests:
+            memory: 128Mi
+        devices:
+          interfaces:
+          - name: default
+            masquerade: {} # The default K8s network
+          - name: ovs-iface
+            bridge: {}     # The high-speed OVS network
+          disks:
+          - name: containerdisk
+            disk:
+              bus: virtio
+      networks:
+      - name: default
+        pod: {}
+      - name: ovs-iface
+        multus:
+          networkName: ovs-net
+      volumes:
+      - name: containerdisk
+        containerDisk:
+          image: quay.io/kubevirt/cirros-container-disk-demo:v1.3.0

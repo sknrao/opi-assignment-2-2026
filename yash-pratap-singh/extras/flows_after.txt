@@ -1,0 +1,7 @@
+asus1@LAPTOP-9HPPRN5U:~$ cat flows_after.txt
+
+NXST_FLOW reply (xid=0x4):
+ cookie=0x0, duration=14.361s, table=0, n_packets=9, n_bytes=882, idle_age=1, priority=100,ip,nw_src=192.168.100.1 actions=NORMAL
+ cookie=0x0, duration=14.258s, table=0, n_packets=9, n_bytes=882, idle_age=1, priority=100,ip,nw_src=192.168.100.2 actions=NORMAL
+ cookie=0x0, duration=14.130s, table=0, n_packets=4, n_bytes=168, idle_age=6, priority=90,arp actions=NORMAL
+ cookie=0x0, duration=14.010s, table=0, n_packets=4, n_bytes=280, idle_age=2, priority=0 actions=NORMAL
