@@ -1,0 +1,10 @@
+f44a8d62-70c9-48d2-b0d0-1b91998fb86e
+    Bridge br0
+        Port veth8c7c28e5
+            Interface veth8c7c28e5
+        Port vethc3af5a4a
+            Interface vethc3af5a4a
+        Port br0
+            Interface br0
+                type: internal
+    ovs_version: "3.1.0"

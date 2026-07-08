@@ -1,0 +1,44 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: ovs-vm
+spec:
+  running: true
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: ovs-vm
+    spec:
+      domain:
+        resources:
+          requests:
+            memory: 128Mi
+        devices:
+          disks:
+          - name: containerdisk
+            disk:
+              bus: virtio
+          - name: cloudinitdisk
+            disk:
+              bus: virtio
+          interfaces:
+          - name: default
+            masquerade: {}
+          - name: ovsnet
+            bridge: {}
+      networks:
+      - name: default
+        pod: {}
+      - name: ovsnet
+        multus:
+          networkName: ovs-network
+      volumes:
+      - name: containerdisk
+        containerDisk:
+          image: quay.io/kubevirt/cirros-container-disk-demo
+      - name: cloudinitdisk
+        cloudInitNoCloud:
+          userData: |
+            #cloud-config
+            password: gocubsgo
+            chpasswd: { expire: False }

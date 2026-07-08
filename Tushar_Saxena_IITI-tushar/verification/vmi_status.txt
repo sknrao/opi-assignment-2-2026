@@ -1,0 +1,3 @@
+NAME     AGE     PHASE     IP            NODENAME                READY   LIVE-MIGRATABLE   PAUSED
+ovs-vm   9m38s   Running   10.244.0.20   ovs-lab-control-plane   True    True              
+testvm   29m     Running   10.244.0.18   ovs-lab-control-plane   True    True              
