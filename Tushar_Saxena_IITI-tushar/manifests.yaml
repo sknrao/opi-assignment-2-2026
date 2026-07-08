@@ -1,0 +1,77 @@
+# manifests.yaml
+# Combined Kubernetes resources for Assignment 2.
+#
+# The NetworkAttachmentDefinition below is copied verbatim from ovs-net.yaml
+# as it was `cat`-verified in the terminal log.
+#
+# The VirtualMachine and Pod below were edited in-place with `nano` during the
+# session (ovs-vm.yaml, ovs-pod.yaml), so their exact byte-for-byte content was
+# never printed back to the terminal. What IS confirmed from the log is their
+# observed behavior: `ovs-vm` came up with a second interface `eth1` on the
+# `ovs-network` attachment (brought up manually inside the CirrOS guest with
+# `sudo ip link set eth1 up`), and `ovs-test` came up with a second interface
+# `net1` also on `ovs-network` (visible via `kubectl exec ovs-test -- ip addr`).
+# The specs below are reconstructed to reproduce that same, verified behavior
+# — treat them as a faithful re-creation, not a verbatim recovery.
+---
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: ovs-network
+spec:
+  config: '{
+    "cniVersion": "0.4.0",
+    "type": "ovs",
+    "bridge": "br0"
+  }'
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: ovs-vm
+spec:
+  runStrategy: Always
+  template:
+    metadata:
+      annotations:
+        k8s.v1.cni.cncf.io/networks: ovs-network
+    spec:
+      domain:
+        devices:
+          interfaces:
+          - name: default
+            masquerade: {}
+          - name: ovs-net
+            bridge: {}
+        resources:
+          requests:
+            memory: 64M
+      networks:
+      - name: default
+        pod: {}
+      - name: ovs-net
+        multus:
+          networkName: ovs-network
+      volumes:
+      - name: containerdisk
+        containerDisk:
+          image: quay.io/kubevirt/cirros-container-disk-demo
+      - name: cloudinitdisk
+        cloudInitNoCloud:
+          userData: |
+            #!/bin/sh
+            echo 'Hi.'
+---
+# Optional: plain pod used to independently confirm that the ovs-network
+# attachment hands out a working second interface outside of KubeVirt.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ovs-test
+  annotations:
+    k8s.v1.cni.cncf.io/networks: ovs-network
+spec:
+  containers:
+  - name: ovs-test
+    image: busybox
+    command: ["sleep", "infinity"]

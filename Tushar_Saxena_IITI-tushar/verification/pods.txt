@@ -1,0 +1,25 @@
+NAMESPACE            NAME                                            READY   STATUS    RESTARTS      AGE
+cdi                  cdi-apiserver-5dd6668475-h4gwz                  1/1     Running   1 (38m ago)   38m
+cdi                  cdi-deployment-85b4b6c649-svfms                 1/1     Running   0             38m
+cdi                  cdi-operator-7cfb547d46-5gszv                   1/1     Running   0             39m
+cdi                  cdi-uploadproxy-5d46fbc5b7-f5pnp                1/1     Running   0             38m
+default              ovs-test                                        1/1     Running   0             14m
+default              virt-launcher-ovs-vm-9s58p                      3/3     Running   0             9m37s
+default              virt-launcher-testvm-pmldp                      3/3     Running   0             29m
+kube-system          coredns-674b8bbfcf-vh7g9                        1/1     Running   0             65m
+kube-system          coredns-674b8bbfcf-xcvwx                        1/1     Running   0             65m
+kube-system          etcd-ovs-lab-control-plane                      1/1     Running   0             65m
+kube-system          kindnet-xh784                                   1/1     Running   0             65m
+kube-system          kube-apiserver-ovs-lab-control-plane            1/1     Running   0             65m
+kube-system          kube-controller-manager-ovs-lab-control-plane   1/1     Running   0             65m
+kube-system          kube-multus-ds-4dzrt                            1/1     Running   0             27m
+kube-system          kube-proxy-nb586                                1/1     Running   0             65m
+kube-system          kube-scheduler-ovs-lab-control-plane            1/1     Running   0             65m
+kube-system          ovs-cni-amd64-vn4wz                             1/1     Running   0             19m
+kubevirt             virt-api-6b6c57947-pz96t                        1/1     Running   1 (38m ago)   61m
+kubevirt             virt-controller-84dddf8bdd-2xskd                1/1     Running   1 (38m ago)   59m
+kubevirt             virt-controller-84dddf8bdd-4779r                1/1     Running   1 (38m ago)   59m
+kubevirt             virt-handler-5p9dj                              1/1     Running   0             43m
+kubevirt             virt-operator-7b4b5d4cbf-4sf9x                  1/1     Running   0             62m
+kubevirt             virt-operator-7b4b5d4cbf-bmz4r                  1/1     Running   0             62m
+local-path-storage   local-path-provisioner-7dc846544d-2pmdt         1/1     Running   0             65m
