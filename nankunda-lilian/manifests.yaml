@@ -1,0 +1,128 @@
+---
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: ovs-lab-net
+  namespace: default
+  annotations:
+    k8s.v1.cni.cncf.io/resourceName: ovs-cni.network.kubevirt.io/br-ovs-lab
+spec:
+  config: '{
+    "cniVersion": "0.4.0",
+    "type": "ovs",
+    "bridge": "br-ovs-lab",
+    "vlan": 0,
+    "ipam": {}
+  }'
+
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-a
+  namespace: default
+  labels:
+    app: ovs-lab
+spec:
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: vm-a
+    spec:
+      domain:
+        cpu:
+          cores: 1
+        resources:
+          requests:
+            memory: 256Mi
+        devices:
+          disks:
+            - name: containerdisk
+              disk:
+                bus: virtio
+            - name: cloudinitdisk
+              disk:
+                bus: virtio
+          interfaces:
+            - name: default
+              masquerade: {}
+            - name: ovsnet
+              bridge: {}
+      networks:
+        - name: default
+          pod: {}
+        - name: ovsnet
+          multus:
+            networkName: ovs-lab-net
+      volumes:
+        - name: containerdisk
+          containerDisk:
+            image: quay.io/kubevirt/cirros-container-disk-demo:latest
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            networkData: |
+              version: 2
+              ethernets:
+                eth1:
+                  addresses: [10.10.10.1/24]
+            userData: |
+              #cloud-config
+              password: cirros
+              chpasswd: { expire: False }
+
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-b
+  namespace: default
+  labels:
+    app: ovs-lab
+spec:
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: vm-b
+    spec:
+      domain:
+        cpu:
+          cores: 1
+        resources:
+          requests:
+            memory: 256Mi
+        devices:
+          disks:
+            - name: containerdisk
+              disk:
+                bus: virtio
+            - name: cloudinitdisk
+              disk:
+                bus: virtio
+          interfaces:
+            - name: default
+              masquerade: {}
+            - name: ovsnet
+              bridge: {}
+      networks:
+        - name: default
+          pod: {}
+        - name: ovsnet
+          multus:
+            networkName: ovs-lab-net
+      volumes:
+        - name: containerdisk
+          containerDisk:
+            image: quay.io/kubevirt/cirros-container-disk-demo:latest
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            networkData: |
+              version: 2
+              ethernets:
+                eth1:
+                  addresses: [10.10.10.2/24]
+            userData: |
+              #cloud-config
+              password: cirros
+              chpasswd: { expire: False }
