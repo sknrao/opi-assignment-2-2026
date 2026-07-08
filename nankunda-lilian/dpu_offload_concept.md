@@ -1,54 +1,6 @@
-# Hands-On Assignment 2: The Cloud-Native OVS Datapath Challenge
-
-## Objective
-Demonstrate an understanding of Kubernetes VM orchestration and Open vSwitch (OVS) datapath fundamentals by deploying a containerized VM attached to an OVS bridge, and conceptualizing its transition to a DPU-accelerated hardware offload model.
-
-## Background
-The internship focuses on running VM networking through OVS that is fully hardware-offloaded to a DPU (like the NVIDIA BlueField-3) using vDPA. Before interacting with physical hardware, it is critical to understand the underlying software datapath plumbing in a Kubernetes environment.
-
-## Tasks
-1. **Cluster Setup:** Spin up a lightweight local Kubernetes cluster (e.g., KinD, Minikube, k3s).
-2. **Networking & Orchestration Stack:**
-   * Install KubeVirt.
-   * Install Multus CNI.
-   * Install and configure an OVS CNI plugin (or configure a host OVS bridge and use a veth-based CNI to bridge into it).
-3. **VM Deployment:** Deploy a KubeVirt `VirtualMachine` (e.g., using a CirrOS image) that successfully attaches to the OVS secondary network.
-4. **Datapath Verification:** * Execute a ping test to/from the VM over the OVS-backed interface.
-   * Capture the OVS flow rules on the underlying node showing the VM's traffic traversing the bridge.
-5. **Hardware Offload Conceptualization:** Document exactly how this software datapath changes when moved to an NVIDIA BlueField-3 using vDPA and hardware offload (e.g., OVS-DOCA, switchdev mode).
-
-## Expected Outputs (Machine-Readable Formats Only)
-Please submit the following files exactly as named:
-1. `cluster_setup.sh`
-   * A purely executable Bash script that bootstraps the cluster, KubeVirt, Multus, and the OVS CNI. 
-2. `manifests.yaml`
-   * A single, valid multi-document YAML file containing all necessary Custom Resources (NetworkAttachmentDefinitions, VirtualMachine, etc.).
-3. `verification_flows.json`
-   * The raw machine-readable JSON output of the OVS flow dump (e.g., generated via `ovs-ofctl dump-flows <bridge> --format=json`).
-4. `ping_results.txt`
-   * The raw stdout dump of the ping test.
-5. `dpu_offload_concept.md`
-   * A Markdown document explaining the architectural shift from the implemented software stack to a hardware-accelerated vDPA architecture on a BlueField-3 DPU.
-
-
-
-
-
-
-
-
 # From Software OVS to BlueField-3 Hardware Offload
 
 ## 1. The software datapath implemented in this exercise
-
-**Note on this specific lab environment:** because this cluster runs inside
-nested Docker containers (GitHub Codespaces → KinD node), there is no
-`openvswitch.ko` kernel module available. OVS therefore runs its
-**userspace/`netdev` datapath** rather than the kernel datapath described
-generically below. The architectural comparison in this document still
-holds — a userspace datapath on a general-purpose CPU has the same "software
-does per-packet work" cost profile as a kernel datapath; DPU offload removes
-host-CPU involvement either way.
 
 In `manifests.yaml`, each KubeVirt VM gets two interfaces:
 
@@ -64,14 +16,15 @@ Every packet a VM sends on `ovsnet` follows this path:
    QEMU process) copies the packet across the guest/host boundary.
 3. The frame lands on a **tap/veth port** that OVS CNI has attached to
    `br-ovs-lab`.
-4. **`ovs-vswitchd`** consults its flow tables. On a flow miss, the packet
-   is matched against the OpenFlow rules (or default normal-forwarding),
-   and a cached flow entry is installed — in the kernel datapath on a
-   normal Linux host, or in the userspace/netdev datapath here — so
-   subsequent packets in the same flow skip the slow path.
-5. The datapath forwards the frame to the destination port (the peer VM's
-   tap/veth), and the reverse path repeats vhost-net/virtio-net to deliver
-   it to the destination guest.
+4. **`ovs-vswitchd`** (userspace) consults its flow tables. On a flow miss,
+   the packet is punted to userspace, matched against the OpenFlow rules
+   installed by the controller (or default normal-forwarding), and a
+   **megaflow** is cached in the **kernel datapath** (`openvswitch.ko`,
+   via the `ovs-dpctl`/`in_kernel` datapath) so subsequent packets in the
+   same flow skip the userspace round-trip.
+5. The kernel datapath forwards the frame to the destination port (the
+   peer VM's tap/veth), and the reverse path repeats vhost-net/virtio-net
+   to deliver it to the destination guest.
 
 Every one of those hops consumes **host CPU cycles** — the hypervisor CPU is
 doing packet copies, flow lookups, and context switches for every VM's
@@ -107,10 +60,12 @@ directly into the **NIC's flow tables (ASIC/eSwitch)**. From that point on:
   DOCA control plane) to establish the rule — same as software OVS.
 - **All subsequent packets** in that flow are switched entirely **inside
   the NIC hardware**, VF-to-VF or VF-to-uplink, without ever touching the
-  host CPU or the hypervisor's OVS datapath.
+  host CPU, host PCIe-to-memory copies for switching purposes, or the
+  hypervisor's OVS kernel module.
 
 This is the same "flow cache after first miss" pattern seen in step 4
-above, except the cache now lives in silicon instead of in software.
+above, except the cache now lives in silicon instead of in
+`openvswitch.ko`.
 
 ### 2.3 vDPA: moving virtio emulation into hardware too
 
@@ -127,12 +82,12 @@ vhost-net and the host kernel network stack altogether.
 
 Combined with switchdev/OVS-DOCA offload, the end-to-end path becomes:
 
-\`\`\`
+```
 guest virtio-net ring  <-- DMA -->  BlueField-3 NIC hardware
                                     (vDPA data plane + eSwitch forwarding)
                                               |
                                     wire / peer VF / uplink
-\`\`\`
+```
 
 with the **host CPU only involved in control-plane events**: VF creation,
 flow-rule installation on miss, migration orchestration, and telemetry —
@@ -144,8 +99,8 @@ not in per-packet forwarding or per-packet virtio emulation.
 |---|---|---|
 | K8s orchestration | KubeVirt `VirtualMachine`, Multus, NAD | **Unchanged** — same CRDs, same `NetworkAttachmentDefinition` model |
 | CNI | OVS CNI plugging veth/tap into a Linux OVS bridge | OVS CNI (or SR-IOV CNI) plugging **VF representors** into the DPU's OVS instance |
-| OVS control plane | `ovs-vswitchd` + kernel or userspace datapath | `ovs-vswitchd` (often running **on the DPU's Arm cores**) programming the **eSwitch/ASIC** via OVS-DOCA or TC flower offload |
-| Per-packet forwarding | Host CPU (kernel or userspace slow path) | **NIC hardware** (eSwitch), host CPU only on flow-miss |
+| OVS control plane | `ovs-vswitchd` + kernel datapath module | `ovs-vswitchd` (often running **on the DPU's Arm cores**) programming the **eSwitch/ASIC** via OVS-DOCA or TC flower offload |
+| Per-packet forwarding | Host CPU (kernel datapath / userspace slow path) | **NIC hardware** (eSwitch), host CPU only on flow-miss |
 | virtio emulation | QEMU + vhost-net on host CPU | **vDPA data plane in NIC hardware**; QEMU/vDPA framework only handles control plane |
 | Host CPU utilization for VM networking | Scales with traffic volume (bad for east-west-heavy workloads) | Roughly flat regardless of traffic volume — freed up for compute workloads |
 | Failure/debug surface | `ovs-ofctl dump-flows br0`, standard Linux tools | Same OVS CLI semantics, but flow dumps also need to be read from the DPU/ASIC tables (`ovs-appctl dpctl/dump-flows -m type=offloaded`, DOCA telemetry) |
@@ -155,9 +110,9 @@ not in per-packet forwarding or per-packet virtio emulation.
 The reason to walk through the *software* version first (as this assignment
 does) is that the control-plane model — Kubernetes CRDs, Multus attaching
 a secondary network, OVS as the switching abstraction, OpenFlow-style flow
-tables — is **identical** whether the datapath underneath is a software
-switch on a general-purpose CPU or an ASIC eSwitch on a BlueField-3. Moving
+tables — is **identical** whether the datapath underneath is a Linux kernel
+module on a general-purpose CPU or an ASIC eSwitch on a BlueField-3. Moving
 to hardware offload is a *datapath* substitution, not an *architecture*
 rewrite: the same `ovs-ofctl dump-flows` mental model applies, just now some
 (eventually most) of those flows say `offloaded:true` and live in silicon
-instead of in host CPU cycles.
+instead of in host kernel memory.

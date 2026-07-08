@@ -1,0 +1,17 @@
+{
+  "bridge": "br-ovs-lab",
+  "command": "ovs-ofctl dump-flows br-ovs-lab",
+  "flow_count": 1,
+  "flows": [
+    {
+      "cookie": "0x0",
+      "duration": "4741.017s",
+      "table": "0",
+      "n_packets": "94",
+      "n_bytes": "7540",
+      "idle_age": "63",
+      "priority": "0",
+      "actions": "NORMAL"
+    }
+  ]
+}
