@@ -1,0 +1,15 @@
+{
+  "bridge": "br0",
+  "flows": [
+    {
+      "cookie": "0x0",
+      "duration": "1725.967s",
+      "table": "0",
+      "n_packets": "102",
+      "n_bytes": "9554",
+      "idle_age": "257",
+      "priority": "0",
+      "actions": "NORMAL"
+    }
+  ]
+}
