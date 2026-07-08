@@ -1,0 +1,16 @@
+1cb4e1a6-9c8f-4d2e-8a7b-3f2c1d5e6a7b
+    Bridge ovs-br0
+        Port ovs-br0
+            tag: 100
+            Interface ovs-br0
+                type: internal
+        Port veth-vm-a
+            tag: 100
+            Interface veth-vm-a
+        Port veth-vm-b
+            tag: 100
+            Interface veth-vm-b
+        Port veth-pod
+            tag: 100
+            Interface veth-pod
+    ovs_version: "3.5.0"

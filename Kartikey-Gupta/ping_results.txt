@@ -1,0 +1,85 @@
+========================================
+Test 1: ovs-ping-pod → vm-a (10.10.0.10)
+========================================
+
+PING 10.10.0.10 (10.10.0.10) 56(84) bytes of data.
+64 bytes from 10.10.0.10: icmp_seq=1 ttl=64 time=0.523 ms
+64 bytes from 10.10.0.10: icmp_seq=2 ttl=64 time=0.412 ms
+64 bytes from 10.10.0.10: icmp_seq=3 ttl=64 time=0.389 ms
+64 bytes from 10.10.0.10: icmp_seq=4 ttl=64 time=0.445 ms
+64 bytes from 10.10.0.10: icmp_seq=5 ttl=64 time=0.398 ms
+
+--- 10.10.0.10 ping statistics ---
+5 packets transmitted, 5 received, 0% packet loss, time 4006ms
+rtt min/avg/max/mdev = 0.389/0.433/0.523/0.051 ms
+
+========================================
+Test 2: ovs-ping-pod → vm-b (10.10.0.11)
+========================================
+
+PING 10.10.0.11 (10.10.0.11) 56(84) bytes of data.
+64 bytes from 10.10.0.11: icmp_seq=1 ttl=64 time=0.612 ms
+64 bytes from 10.10.0.11: icmp_seq=2 ttl=64 time=0.487 ms
+64 bytes from 10.10.0.11: icmp_seq=3 ttl=64 time=0.501 ms
+64 bytes from 10.10.0.11: icmp_seq=4 ttl=64 time=0.456 ms
+64 bytes from 10.10.0.11: icmp_seq=5 ttl=64 time=0.423 ms
+
+--- 10.10.0.11 ping statistics ---
+5 packets transmitted, 5 received, 0% packet loss, time 4008ms
+rtt min/avg/max/mdev = 0.423/0.495/0.612/0.066 ms
+
+========================================
+Test 3: vm-a → vm-b (10.10.0.11) via console
+========================================
+
+$ virtctl console vm-a
+Successfully connected to vm-a console. The escape sequence is ^]
+
+login as 'cirros' user. default password: 'gocubsgo'. use 'sudo' for root.
+vm-a login: cirros
+Password: 
+$ ip addr show eth1
+3: eth1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast qlen 1000
+    link/ether 02:a0:00:00:00:0b brd ff:ff:ff:ff:ff:ff
+    inet 10.10.0.10/24 scope global eth1
+       valid_lft forever preferred_lft forever
+$ ping -c 5 -I eth1 10.10.0.11
+PING 10.10.0.11 (10.10.0.11): 56 data bytes
+64 bytes from 10.10.0.11: seq=0 ttl=64 time=0.789 ms
+64 bytes from 10.10.0.11: seq=1 ttl=64 time=0.654 ms
+64 bytes from 10.10.0.11: seq=2 ttl=64 time=0.712 ms
+64 bytes from 10.10.0.11: seq=3 ttl=64 time=0.623 ms
+64 bytes from 10.10.0.11: seq=4 ttl=64 time=0.698 ms
+
+--- 10.10.0.11 ping statistics ---
+5 packets transmitted, 5 packets received, 0% packet loss
+round-trip min/avg/max = 0.623/0.695/0.789 ms
+$ exit
+
+========================================
+Test 4: vm-b → vm-a (10.10.0.10) via console
+========================================
+
+$ virtctl console vm-b
+Successfully connected to vm-b console. The escape sequence is ^]
+
+login as 'cirros' user. default password: 'gocubsgo'. use 'sudo' for root.
+vm-b login: cirros
+Password: 
+$ ip addr show eth1
+3: eth1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast qlen 1000
+    link/ether 02:b0:00:00:00:0b brd ff:ff:ff:ff:ff:ff
+    inet 10.10.0.11/24 scope global eth1
+       valid_lft forever preferred_lft forever
+$ ping -c 5 -I eth1 10.10.0.10
+PING 10.10.0.10 (10.10.0.10): 56 data bytes
+64 bytes from 10.10.0.10: seq=0 ttl=64 time=0.834 ms
+64 bytes from 10.10.0.10: seq=1 ttl=64 time=0.701 ms
+64 bytes from 10.10.0.10: seq=2 ttl=64 time=0.689 ms
+64 bytes from 10.10.0.10: seq=3 ttl=64 time=0.745 ms
+64 bytes from 10.10.0.10: seq=4 ttl=64 time=0.712 ms
+
+--- 10.10.0.10 ping statistics ---
+5 packets transmitted, 5 packets received, 0% packet loss
+round-trip min/avg/max = 0.689/0.736/0.834 ms
+$ exit

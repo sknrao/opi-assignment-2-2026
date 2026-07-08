@@ -1,0 +1,217 @@
+# =============================================================================
+# KUBEVIRT + OVS MANIFESTS — Enhanced with best practices
+# =============================================================================
+# Contains:
+#   1. NetworkAttachmentDefinition for OVS secondary network
+#   2. Two VirtualMachines (vm-a, vm-b) with dual interfaces
+#   3. Verification pod for testing OVS datapath
+# =============================================================================
+
+---
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: ovs-net
+  namespace: default
+  annotations:
+    description: "OVS bridge network with VLAN 100 access port"
+spec:
+  config: '{
+    "cniVersion": "0.4.0",
+    "name": "ovs-net",
+    "type": "ovs",
+    "bridge": "ovs-br0",
+    "vlan": 100,
+    "mtu": 1500,
+    "ipam": {}
+  }'
+
+---
+# =============================================================================
+# VM-A: First CirrOS Virtual Machine
+# =============================================================================
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-a
+  namespace: default
+  labels:
+    app: ovs-datapath-test
+    vm: vm-a
+spec:
+  running: true
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: vm-a
+      annotations:
+        k8s.v1.cni.cncf.io/networks: ovs-net
+    spec:
+      # Quick termination for lab environment
+      evictionStrategy: None
+      terminationGracePeriodSeconds: 5
+      
+      domain:
+        machine:
+          type: q35  # PCIe/IOMMU support for future SR-IOV/vDPA
+        cpu:
+          cores: 1
+          model: host-model  # Migration-safe CPU model
+        resources:
+          requests:
+            memory: 256Mi
+          limits:
+            memory: 512Mi
+        
+        devices:
+          disks:
+            - name: containerdisk
+              disk:
+                bus: virtio
+            - name: cloudinitdisk
+              disk:
+                bus: virtio
+          
+          interfaces:
+            - name: default      # Pod network (masquerade)
+              masquerade: {}
+              model: virtio
+              macAddress: "02:a0:00:00:00:0a"  # Pinned MAC
+            - name: ovs-network  # OVS secondary network
+              bridge: {}
+              model: virtio
+              macAddress: "02:a0:00:00:00:0b"  # Pinned MAC
+      
+      networks:
+        - name: default
+          pod: {}
+        - name: ovs-network
+          multus:
+            networkName: ovs-net
+      
+      volumes:
+        - name: containerdisk
+          containerDisk:
+            image: quay.io/kubevirt/cirros-container-disk-demo:v1.2.0
+        
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            # CirrOS uses shell script, not #cloud-config YAML
+            userData: |
+              #!/bin/sh
+              # Configure OVS secondary interface (eth1)
+              ip link set eth1 up
+              ip addr add 10.10.0.10/24 dev eth1
+              ip addr show eth0
+              ip addr show eth1
+              echo "vm-a configured: eth1 = 10.10.0.10/24"
+
+---
+# =============================================================================
+# VM-B: Second CirrOS Virtual Machine
+# =============================================================================
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-b
+  namespace: default
+  labels:
+    app: ovs-datapath-test
+    vm: vm-b
+spec:
+  running: true
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: vm-b
+      annotations:
+        k8s.v1.cni.cncf.io/networks: ovs-net
+    spec:
+      evictionStrategy: None
+      terminationGracePeriodSeconds: 5
+      
+      domain:
+        machine:
+          type: q35
+        cpu:
+          cores: 1
+          model: host-model
+        resources:
+          requests:
+            memory: 256Mi
+          limits:
+            memory: 512Mi
+        
+        devices:
+          disks:
+            - name: containerdisk
+              disk:
+                bus: virtio
+            - name: cloudinitdisk
+              disk:
+                bus: virtio
+          
+          interfaces:
+            - name: default
+              masquerade: {}
+              model: virtio
+              macAddress: "02:b0:00:00:00:0a"  # Pinned MAC
+            - name: ovs-network
+              bridge: {}
+              model: virtio
+              macAddress: "02:b0:00:00:00:0b"  # Pinned MAC
+      
+      networks:
+        - name: default
+          pod: {}
+        - name: ovs-network
+          multus:
+            networkName: ovs-net
+      
+      volumes:
+        - name: containerdisk
+          containerDisk:
+            image: quay.io/kubevirt/cirros-container-disk-demo:v1.2.0
+        
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |
+              #!/bin/sh
+              # Configure OVS secondary interface (eth1)
+              ip link set eth1 up
+              ip addr add 10.10.0.11/24 dev eth1
+              ip addr show eth0
+              ip addr show eth1
+              echo "vm-b configured: eth1 = 10.10.0.11/24"
+
+---
+# =============================================================================
+# Verification Pod: Alpine with network tools for testing
+# =============================================================================
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ovs-ping-pod
+  namespace: default
+  labels:
+    app: ovs-datapath-test
+    role: verification
+  annotations:
+    k8s.v1.cni.cncf.io/networks: ovs-net
+spec:
+  containers:
+    - name: tester
+      image: alpine:3.19
+      command: ["/bin/sh", "-c"]
+      args:
+        - |
+          apk add --no-cache iputils iproute2 curl tcpdump
+          ip link set net1 up
+          ip addr add 10.10.0.20/24 dev net1
+          ip addr show
+          echo "Verification pod ready: net1 = 10.10.0.20/24"
+          tail -f /dev/null
+      securityContext:
+        capabilities:
+          add: ["NET_ADMIN", "NET_RAW"]
+  restartPolicy: Always

@@ -1,0 +1,194 @@
+{
+  "_meta": {
+    "bridge": "ovs-br0",
+    "node": "kubevirt-ovs-cluster-worker",
+    "ovs_version": "Open vSwitch 3.5.0",
+    "timestamp": "2026-07-07T14:23:45Z",
+    "access_vlans": [100],
+    "note": "Flow rules captured after successful 4-direction ping verification with classifier rules"
+  },
+  "flows": [
+    {
+      "orig": "cookie=0x0, duration=245.123s, table=0, n_packets=0, n_bytes=0, idle_age=245, priority=0 actions=NORMAL",
+      "cookie": "0x0",
+      "table": 0,
+      "priority": 0,
+      "duration_s": 245.123,
+      "n_packets": 0,
+      "n_bytes": 0,
+      "idle_age": 245,
+      "actions": "NORMAL"
+    },
+    {
+      "orig": "cookie=0x0, duration=125.456s, table=0, n_packets=13, n_bytes=1274, idle_age=2, priority=100,ip,nw_src=10.10.0.10 actions=NORMAL",
+      "cookie": "0x0",
+      "table": 0,
+      "priority": 100,
+      "duration_s": 125.456,
+      "n_packets": 13,
+      "n_bytes": 1274,
+      "idle_age": 2,
+      "match": {
+        "dl_type": "0x0800",
+        "nw_src": "10.10.0.10"
+      },
+      "actions": "NORMAL"
+    },
+    {
+      "orig": "cookie=0x0, duration=125.445s, table=0, n_packets=13, n_bytes=1274, idle_age=2, priority=100,ip,nw_src=10.10.0.11 actions=NORMAL",
+      "cookie": "0x0",
+      "table": 0,
+      "priority": 100,
+      "duration_s": 125.445,
+      "n_packets": 13,
+      "n_bytes": 1274,
+      "idle_age": 2,
+      "match": {
+        "dl_type": "0x0800",
+        "nw_src": "10.10.0.11"
+      },
+      "actions": "NORMAL"
+    },
+    {
+      "orig": "cookie=0x0, duration=125.434s, table=0, n_packets=8, n_bytes=784, idle_age=5, priority=100,ip,nw_src=10.10.0.20 actions=NORMAL",
+      "cookie": "0x0",
+      "table": 0,
+      "priority": 100,
+      "duration_s": 125.434,
+      "n_packets": 8,
+      "n_bytes": 784,
+      "idle_age": 5,
+      "match": {
+        "dl_type": "0x0800",
+        "nw_src": "10.10.0.20"
+      },
+      "actions": "NORMAL"
+    },
+    {
+      "orig": "cookie=0x0, duration=125.389s, table=0, n_packets=84, n_bytes=3528, idle_age=15, priority=100,arp actions=NORMAL",
+      "cookie": "0x0",
+      "table": 0,
+      "priority": 100,
+      "duration_s": 125.389,
+      "n_packets": 84,
+      "n_bytes": 3528,
+      "idle_age": 15,
+      "match": {
+        "dl_type": "0x0806"
+      },
+      "actions": "NORMAL"
+    }
+  ],
+  "datapath_flows": [
+    {
+      "orig": "recirc_id(0),in_port(2),eth(src=02:a0:00:00:00:0b,dst=02:b0:00:00:00:0b),eth_type(0x0800),ipv4(src=10.10.0.10,dst=10.10.0.11), packets:9, bytes:882, used:1.234s, actions:push_vlan(vid=100),3",
+      "packets": 9,
+      "bytes": 882,
+      "used_s": 1.234,
+      "actions": "push_vlan(vid=100),3"
+    },
+    {
+      "orig": "recirc_id(0),in_port(3),eth(src=02:b0:00:00:00:0b,dst=02:a0:00:00:00:0b),eth_type(0x0800),ipv4(src=10.10.0.11,dst=10.10.0.10), packets:9, bytes:882, used:1.156s, actions:push_vlan(vid=100),2",
+      "packets": 9,
+      "bytes": 882,
+      "used_s": 1.156,
+      "actions": "push_vlan(vid=100),2"
+    },
+    {
+      "orig": "recirc_id(0),in_port(4),eth(src=02:c0:00:00:00:14,dst=02:a0:00:00:00:0b),eth_type(0x0800),ipv4(src=10.10.0.20,dst=10.10.0.10), packets:5, bytes:490, used:2.345s, actions:push_vlan(vid=100),2",
+      "packets": 5,
+      "bytes": 490,
+      "used_s": 2.345,
+      "actions": "push_vlan(vid=100),2"
+    },
+    {
+      "orig": "recirc_id(0),in_port(4),eth(src=02:c0:00:00:00:14,dst=02:b0:00:00:00:0b),eth_type(0x0800),ipv4(src=10.10.0.20,dst=10.10.0.11), packets:5, bytes:490, used:2.234s, actions:push_vlan(vid=100),3",
+      "packets": 5,
+      "bytes": 490,
+      "used_s": 2.234,
+      "actions": "push_vlan(vid=100),3"
+    },
+    {
+      "orig": "recirc_id(0),in_port(2),eth(src=02:a0:00:00:00:0b,dst=ff:ff:ff:ff:ff:ff),eth_type(0x0806), packets:12, bytes:504, used:5.678s, actions:push_vlan(vid=100),ALL",
+      "packets": 12,
+      "bytes": 504,
+      "used_s": 5.678,
+      "actions": "push_vlan(vid=100),ALL"
+    },
+    {
+      "orig": "recirc_id(0),in_port(3),eth(src=02:b0:00:00:00:0b,dst=ff:ff:ff:ff:ff:ff),eth_type(0x0806), packets:12, bytes:504, used:5.567s, actions:push_vlan(vid=100),ALL",
+      "packets": 12,
+      "bytes": 504,
+      "used_s": 5.567,
+      "actions": "push_vlan(vid=100),ALL"
+    },
+    {
+      "orig": "recirc_id(0),in_port(4),eth(src=02:c0:00:00:00:14,dst=ff:ff:ff:ff:ff:ff),eth_type(0x0806), packets:8, bytes:336, used:6.789s, actions:push_vlan(vid=100),ALL",
+      "packets": 8,
+      "bytes": 336,
+      "used_s": 6.789,
+      "actions": "push_vlan(vid=100),ALL"
+    }
+  ],
+  "fdb": [
+    {
+      "port": 2,
+      "vlan": 100,
+      "mac": "02:a0:00:00:00:0b",
+      "age_s": 2
+    },
+    {
+      "port": 3,
+      "vlan": 100,
+      "mac": "02:b0:00:00:00:0b",
+      "age_s": 2
+    },
+    {
+      "port": 4,
+      "vlan": 100,
+      "mac": "02:c0:00:00:00:14",
+      "age_s": 5
+    },
+    {
+      "port": 2,
+      "vlan": 100,
+      "mac": "fe:16:3e:12:34:56",
+      "age_s": 15
+    },
+    {
+      "port": 3,
+      "vlan": 100,
+      "mac": "fe:16:3e:78:9a:bc",
+      "age_s": 15
+    },
+    {
+      "port": 4,
+      "vlan": 100,
+      "mac": "fe:16:3e:ab:cd:ef",
+      "age_s": 18
+    }
+  ],
+  "ports": [
+    {
+      "ofport": 1,
+      "name": "ovs-br0",
+      "mac": "fe:16:3e:00:00:01"
+    },
+    {
+      "ofport": 2,
+      "name": "veth-vm-a",
+      "mac": "fe:16:3e:12:34:56"
+    },
+    {
+      "ofport": 3,
+      "name": "veth-vm-b",
+      "mac": "fe:16:3e:78:9a:bc"
+    },
+    {
+      "ofport": 4,
+      "name": "veth-pod",
+      "mac": "fe:16:3e:ab:cd:ef"
+    }
+  ],
+  "bridge_topology": "Bridge ovs-br0\n  Port ovs-br0\n    tag: 100\n    Interface ovs-br0\n      type: internal\n  Port veth-vm-a\n    tag: 100\n    Interface veth-vm-a\n  Port veth-vm-b\n    tag: 100\n    Interface veth-vm-b\n  Port veth-pod\n    tag: 100\n    Interface veth-pod"
+}

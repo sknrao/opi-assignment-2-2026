@@ -1,0 +1,28 @@
+Execution Mode Information
+==========================
+Cluster Type: kind
+KVM Available: true
+KubeVirt useEmulation: false
+OVS Version: Open vSwitch 3.5.0
+QEMU Acceleration: kvm
+Node: kubevirt-ovs-cluster-worker
+Timestamp: 2026-07-07T14:23:45Z
+Architecture: x86_64
+Kubernetes Version: v1.32.2
+
+Hardware Virtualization:
+- /dev/kvm present: yes
+- vmx/svm CPU flags: yes
+- Nested virtualization: enabled
+
+OVS Configuration:
+- Bridge: ovs-br0
+- VLAN: 100
+- Datapath: system
+- OpenFlow version: 1.3
+
+Verification Status:
+- Ping tests: 4/4 passed (0% packet loss)
+- Classifier flows: 3 installed, all with n_packets > 0
+- Datapath megaflows: 7 entries
+- FDB entries: 6 learned MACs on VLAN 100
