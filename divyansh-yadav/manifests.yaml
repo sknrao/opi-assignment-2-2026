@@ -1,0 +1,190 @@
+---
+# =============================================================================
+# manifests.yaml
+# Kubernetes Custom Resources for the OVS-KubeVirt Datapath Lab
+# Author  : Divyansh Yadav  (LFX Mentorship — Assignment 2)
+#
+# Resources:
+#   1. NetworkAttachmentDefinition  — wires VM secondary NIC to OVS bridge
+#   2. VirtualMachine               — CirrOS-based lightweight test VM
+#
+# NOTE: This file is a template. It expects the following environment variables
+# to be substituted before applying (handled automatically by cluster_setup.sh):
+#   - OVS_BRIDGE_NAME
+#   - OVS_VLAN
+#   - OVS_VM_NAME
+#   - OVS_VM_IP
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Resource 1: NetworkAttachmentDefinition
+# This CR is read by Multus. When a Pod/VMI requests the annotation
+# "k8s.v1.cni.cncf.io/networks: ovs-net", Multus invokes the OVS-CNI plugin
+# with the config embedded below.
+#
+# NOTE: OVS-CNI creates a veth pair, attaching one end to the OVS bridge on
+# the node and placing the other end inside the virt-launcher pod's network
+# namespace. For KubeVirt VMs with 'bridge' binding, virt-handler then
+# creates a TAP device inside the virt-launcher pod for QEMU, and bridges
+# the pod's veth end to the TAP device using a per-VM Linux bridge.
+# -----------------------------------------------------------------------------
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: ovs-net
+  namespace: default
+  # 'resourceName' annotation is intentionally omitted: this NAD doesn't back
+  # onto a device-plugin-managed resource (unlike SR-IOV VFs, which use
+  # resourceName + a device plugin so the scheduler can count available VFs
+  # per node). Without resourceName, Multus invokes the OVS-CNI plugin
+  # directly on pod admission with no resource-accounting gate — that's
+  # correct and expected for a plain bridge/OVS-backed NAD like this one.
+  # Add resourceName only if a device-plugin-backed resource (e.g. SR-IOV VFs,
+  # or the ovs-cni-marker DaemonSet's tracked bridge ports) needs to be
+  # scheduler-visible and capacity-limited.
+spec:
+  config: |
+    {
+      "cniVersion": "0.3.1",
+      "name": "ovs-net",
+      "type": "ovs",
+      "bridge": "${OVS_BRIDGE_NAME}",
+      "vlan": ${OVS_VLAN},
+      "mtu": 1500
+    }
+  # Static IPAM block omitted to prevent IP collisions. IP addressing is
+  # handled inside each VM by cloud-init (see userData below), giving each
+  # VM a unique address.
+
+---
+# -----------------------------------------------------------------------------
+# Resource 2: VirtualMachine (CirrOS)
+# CirrOS is a minimal cloud-init test image (~14 MiB). It boots in ~15 s
+# under hardware-accelerated KVM; expect longer under software emulation
+# (TCG), e.g. on macOS/Docker Desktop hosts without /dev/kvm.
+#
+# The VM has:
+#   - Interface 0 (masquerade): pod network (Flannel) — default route
+#   - Interface 1 (bridge)    : secondary OVS network (br-ovs, VLAN 100)
+#
+# The 'bridge' binding strategy for the secondary interface tells KubeVirt's
+# virt-handler to plumb the VM's TAP device to the pod-side end of the veth
+# pair that Multus/OVS-CNI pre-created. This is the critical junction between
+# the KubeVirt control plane and the OVS data plane.
+# -----------------------------------------------------------------------------
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: ${OVS_VM_NAME}
+  namespace: default
+  labels:
+    app: ${OVS_VM_NAME}
+    assignment: "lfx-ovs-datapath"
+spec:
+  # VM starts automatically when the CR is created
+  running: true
+
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: ${OVS_VM_NAME}
+      annotations:
+        # Request secondary OVS network from Multus
+        k8s.v1.cni.cncf.io/networks: ovs-net
+
+    spec:
+      # Use 'LiveMigrate' in production environments.
+      evictionStrategy: None  # Lab only — VM is killed on node drain, not migrated
+      # CirrOS has no services to drain; the 30s default just wastes time on teardown.
+      terminationGracePeriodSeconds: 5
+
+      domain:
+        # Machine type: q35 is the recommended modern QEMU machine type.
+        # It supports PCIe and IOMMU, and is required for vDPA/SR-IOV later.
+        machine:
+          type: q35
+
+        cpu:
+          cores: 1
+          sockets: 1
+          threads: 1
+          # 'host-model' works fine for nested virt and is safer because it
+          # abstracts CPU features, making the VM migration-compatible.
+          # 'host-passthrough' exposes exact host CPU feature flags and will
+          # cause migration failures if the destination host has a different
+          # CPU. Using 'host-model' here purely for compatibility in a
+          # single-node lab.
+          #
+          # NOTE: When useEmulation is enabled (no /dev/kvm), KubeVirt/QEMU
+          # uses TCG (software emulation), which ignores host-model and
+          # falls back to its own default CPU model.
+          model: host-model
+
+        resources:
+          requests:
+            memory: 256Mi
+            cpu: "500m"
+          limits:
+            memory: 512Mi
+            cpu: "2"
+
+        devices:
+          disks:
+            - name: containerdisk
+              disk:
+                bus: virtio       # virtio is fastest; requires a guest driver
+            - name: cloudinitdisk
+              disk:
+                bus: virtio
+
+          # Network interface definitions.
+          # Order MUST match the 'networks' list below (index-aligned).
+          interfaces:
+            # Interface 0: default pod network (Flannel / masquerade NAT)
+            - name: default
+              masquerade: {}       # SNAT — VM gets internet access via the pod IP
+              model: virtio
+
+            # Interface 1: secondary OVS network.
+            # 'bridge' binding: virt-handler creates a per-VM Linux bridge
+            # and connects it to the pod-side veth handed off by OVS-CNI.
+            - name: ovs-secondary
+              bridge: {}
+              model: virtio
+
+      # Networks — must be index-aligned with interfaces above
+      networks:
+        # Network 0: pod network (masquerade)
+        - name: default
+          pod: {}
+
+        # Network 1: secondary OVS network via Multus
+        - name: ovs-secondary
+          multus:
+            networkName: default/ovs-net   # references the NAD above
+
+      # Volumes — back the disk devices declared above
+      volumes:
+        - name: containerdisk
+          containerDisk:
+            # CirrOS, published as a KubeVirt-compatible container image.
+            image: quay.io/kubevirt/cirros-container-disk-demo:v1.2.0
+
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |
+              #!/bin/sh
+              # CirrOS cloud-init only supports a plain shell script here
+              # (no cloud-config YAML). 'write_files', 'packages', and most
+              # cloud-config modules are NOT supported.
+              #
+              # CirrOS default credentials are: cirros / gocubsgo
+              # BusyBox does NOT include 'chpasswd', so we can't change it here.
+
+              # Configure the secondary OVS interface (eth1) statically.
+              ip link set eth1 up
+              ip addr add ${OVS_VM_IP} dev eth1
+
+              # Verify both interfaces are configured
+              ip addr show eth0
+              ip addr show eth1

@@ -1,0 +1,23 @@
+# REAL capture of traffic crossing the Open vSwitch datapath, on an x86_64 Linux host.
+#
+# Open vSwitch 3.7.1, bridge br1, userspace (netdev) datapath. The two endpoints are
+# veth pairs in isolated network namespaces standing in for the CirrOS VM taps (the
+# host had no /dev/kvm, so the KubeVirt guests could not boot). OVS-CNI attaches a
+# VM's tap to the bridge in exactly the same way this veth port is attached, so the
+# datapath being exercised is identical; only the endpoint type differs. See NOTES.md
+# and ovs_datapath_check.sh for the exact script.
+#
+#   vm1  10.10.0.1/24  mac 02:00:00:00:00:01  -> ovs-vm1 (port 1)
+#   vm2  10.10.0.2/24  mac 02:00:00:00:00:02  -> ovs-vm2 (port 2)
+# host Linux 7.0.0-27-generic x86_64 ; ovs-vsctl (Open vSwitch) 3.7.1 ; datapath_type=netdev
+# command: ip netns exec vm1 ping -c 4 10.10.0.2
+
+PING 10.10.0.2 (10.10.0.2) 56(84) bytes of data.
+64 bytes from 10.10.0.2: icmp_seq=1 ttl=64 time=1.05 ms
+64 bytes from 10.10.0.2: icmp_seq=2 ttl=64 time=0.403 ms
+64 bytes from 10.10.0.2: icmp_seq=3 ttl=64 time=0.401 ms
+64 bytes from 10.10.0.2: icmp_seq=4 ttl=64 time=0.435 ms
+
+--- 10.10.0.2 ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 3056ms
+rtt min/avg/max/mdev = 0.401/0.572/1.050/0.276 ms

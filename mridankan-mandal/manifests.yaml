@@ -1,0 +1,83 @@
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: ovs-secondary
+  namespace: default
+spec:
+  config: |
+    {
+      "cniVersion": "0.3.1",
+      "name": "ovs-secondary",
+      "type": "bridge",
+      "bridge": "br-vm",
+      "disableContainerInterface": true,
+      "promiscMode": true
+    }
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: ovs-vm
+  namespace: default
+spec:
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: ovs-vm
+    spec:
+      terminationGracePeriodSeconds: 0
+      domain:
+        cpu:
+          cores: 1
+        resources:
+          requests:
+            memory: 512Mi
+        devices:
+          disks:
+            - name: containerdisk
+              disk:
+                bus: virtio
+            - name: cloudinitdisk
+              disk:
+                bus: virtio
+          interfaces:
+            - name: ovs
+              bridge: {}
+              macAddress: "02:de:ad:be:ef:10"
+      networks:
+        - name: ovs
+          multus:
+            networkName: default/ovs-secondary
+      volumes:
+        - name: containerdisk
+          containerDisk:
+            image: quay.io/kubevirt/cirros-container-disk-demo:v1.8.4
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |
+              #!/bin/sh
+              hostname ovs-vm || true
+              target_ip="192.168.100.1"
+              attempt=0
+              while [ "$attempt" -lt 30 ]; do
+                if ping -c 1 -W 2 "$target_ip" >/dev/null 2>&1; then
+                  break
+                fi
+                attempt=$((attempt + 1))
+                sleep 2
+              done
+              echo "__OPI_VM_TO_HOST_PING_START__"
+              echo "ping -c 4 ${target_ip}"
+              ping -c 4 "$target_ip" || true
+              echo "__OPI_VM_TO_HOST_PING_END__"
+            networkData: |
+              version: 2
+              ethernets:
+                eth0:
+                  match:
+                    macaddress: "02:de:ad:be:ef:10"
+                  set-name: eth0
+                  dhcp4: false
+                  addresses:
+                    - 192.168.100.10/24

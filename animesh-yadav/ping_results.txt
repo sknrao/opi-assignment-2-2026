@@ -1,0 +1,18 @@
+$ ping -c 4 8.8.8.8
+PING 8.8.8.8 (8.8.8.8): 56 data bytes
+64 bytes from 8.8.8.8: seq=0 ttl=61 time=68.745 ms
+64 bytes from 8.8.8.8: seq=1 ttl=61 time=117.999 ms
+64 bytes from 8.8.8.8: seq=2 ttl=61 time=75.908 ms
+64 bytes from 8.8.8.8: seq=3 ttl=61 time=80.718 ms
+
+--- 8.8.8.8 ping statistics ---
+4 packets transmitted, 4 packets received, 0% packet loss
+round-trip min/avg/max = 68.745/85.842/117.999 ms
+$ ping -c 4 8.8.8.8
+PING 8.8.8.8 (8.8.8.8): 56 data bytes
+64 bytes from 8.8.8.8: seq=0 ttl=61 time=134.803 ms
+64 bytes from 8.8.8.8: seq=1 ttl=61 time=90.123 ms
+64 bytes from 8.8.8.8: seq=2 ttl=61 time=208.365 ms
+64 bytes from 8.8.8.8: seq=3 ttl=61 time=166.940 ms
+
+--- 8.8.8.8 ping statistics ---

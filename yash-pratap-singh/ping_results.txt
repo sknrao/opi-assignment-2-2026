@@ -1,0 +1,55 @@
+=============================================================================
+ping_results.txt  -  east-west ICMP over the OVS bridge (br-ovs)
+  vm-alpha eth1 = 192.168.100.1/24   |   vm-beta eth1 = 192.168.100.2/24
+  192.168.100.0/24 exists only on eth1 and has no route except through br-ovs,
+  so all traffic below necessarily traverses OVS. Pings run inside the guests.
+=============================================================================
+
+----- DIRECTION 1:  vm-alpha (192.168.100.1) -> vm-beta (192.168.100.2)  [from vm-alpha console] -----
+
+spawn virtctl console vm-alpha --namespace default
+
+Successfully connected to vm-alpha console. Press Ctrl+] or Ctrl+5 to exit console.
+
+login as 'cirros' user. default password: 'gocubsgo'. use 'sudo' for root.
+vm-alpha login: gocubsgo
+Password: 
+Login incorrect
+vm-alpha login: cirros
+Password: 
+$ ping -c 5 192.168.100.2
+PING 192.168.100.2 (192.168.100.2): 56 data bytes
+64 bytes from 192.168.100.2: seq=0 ttl=64 time=3.399 ms
+64 bytes from 192.168.100.2: seq=1 ttl=64 time=1.605 ms
+64 bytes from 192.168.100.2: seq=2 ttl=64 time=0.942 ms
+64 bytes from 192.168.100.2: seq=3 ttl=64 time=2.207 ms
+64 bytes from 192.168.100.2: seq=4 ttl=64 time=1.325 ms
+
+--- 192.168.100.2 ping statistics ---
+5 packets transmitted, 5 packets received, 0% packet loss
+round-trip min/avg/max = 0.942/1.895/3.399 ms
+$ 
+----- DIRECTION 2:  vm-beta (192.168.100.2) -> vm-alpha (192.168.100.1)  [from vm-beta console] -----
+
+spawn virtctl console vm-beta --namespace default
+
+Successfully connected to vm-beta console. Press Ctrl+] or Ctrl+5 to exit console.
+
+login as 'cirros' user. default password: 'gocubsgo'. use 'sudo' for root.
+vm-beta login: gocubsgo
+Password: 
+Login incorrect
+vm-beta login: cirros
+Password: 
+$ ping -c 5 192.168.100.1
+PING 192.168.100.1 (192.168.100.1): 56 data bytes
+64 bytes from 192.168.100.1: seq=0 ttl=64 time=1.753 ms
+64 bytes from 192.168.100.1: seq=1 ttl=64 time=1.518 ms
+64 bytes from 192.168.100.1: seq=2 ttl=64 time=1.599 ms
+64 bytes from 192.168.100.1: seq=3 ttl=64 time=0.865 ms
+64 bytes from 192.168.100.1: seq=4 ttl=64 time=0.978 ms
+
+--- 192.168.100.1 ping statistics ---
+5 packets transmitted, 5 packets received, 0% packet loss
+round-trip min/avg/max = 0.865/1.342/1.753 ms
+$ 
