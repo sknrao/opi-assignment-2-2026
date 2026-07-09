@@ -1,0 +1,86 @@
+# =============================================================================
+# manifests.yaml — Hands-On Assignment 2 (v2)
+# All Custom Resources for the OVS-attached KubeVirt VM.
+#
+# v2 changes: the original CirrOS containerDisk is x86_64-only and crash-loops
+# on arm64 nodes (Apple Silicon / kind). Switched to the multi-arch Fedora
+# containerdisk, raised guest memory accordingly, pinned a MAC on the OVS
+# interface, and used cloud-init network-config v2 matched on that MAC so the
+# static IP lands on the right NIC regardless of interface naming.
+# =============================================================================
+---
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: ovs-net
+  namespace: default
+spec:
+  config: |
+    {
+      "cniVersion": "0.4.0",
+      "type": "ovs",
+      "bridge": "br1",
+      "mtu": 1450
+    }
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: cirros-ovs
+  namespace: default
+  labels:
+    app: ovs-datapath-lab
+spec:
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        kubevirt.io/vm: cirros-ovs
+    spec:
+      terminationGracePeriodSeconds: 30
+      domain:
+        cpu:
+          cores: 1
+        memory:
+          guest: 1Gi
+        devices:
+          disks:
+            - name: containerdisk
+              disk:
+                bus: virtio
+            - name: cloudinitdisk
+              disk:
+                bus: virtio
+          interfaces:
+            - name: default
+              masquerade: {}
+            - name: ovs
+              bridge: {}
+              macAddress: "02:ca:fe:00:00:01"
+      networks:
+        - name: default
+          pod: {}
+        - name: ovs
+          multus:
+            networkName: default/ovs-net
+      volumes:
+        - name: containerdisk
+          containerDisk:
+            # Multi-arch (amd64 + arm64) — boots on Apple Silicon kind nodes.
+            image: quay.io/containerdisks/ubuntu:24.04
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            networkData: |
+              version: 2
+              ethernets:
+                ovsnic:
+                  match:
+                    macaddress: "02:ca:fe:00:00:01"
+                  addresses:
+                    - 10.10.10.10/24
+                  mtu: 1450
+            userData: |
+              #cloud-config
+              user: fedora
+              password: ovslab
+              chpasswd: { expire: False }
