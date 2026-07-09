@@ -1,0 +1,14 @@
+e08b1628-9c20-453d-b965-7fee0a68205f
+    Bridge br1
+        datapath_type: netdev
+        Port veth4191d483
+            Interface veth4191d483
+        Port ovs-gw
+            Interface ovs-gw
+                type: internal
+        Port vethc0d72acc
+            Interface vethc0d72acc
+        Port br1
+            Interface br1
+                type: internal
+    ovs_version: "3.5.0"

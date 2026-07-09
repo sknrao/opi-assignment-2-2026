@@ -1,0 +1,10 @@
+# Attempted ping across br1 from node (ovs-gw, 10.10.10.1) to VM (10.10.10.10).
+# VM never completed boot in this environment - see submission_notes.md.
+PING 10.10.10.10 (10.10.10.10) from 10.10.10.1 ovs-gw: 56(84) bytes of data.
+From 10.10.10.1 icmp_seq=1 Destination Host Unreachable
+From 10.10.10.1 icmp_seq=2 Destination Host Unreachable
+From 10.10.10.1 icmp_seq=3 Destination Host Unreachable
+
+--- 10.10.10.10 ping statistics ---
+4 packets transmitted, 0 received, +3 errors, 100% packet loss, time 3068ms
+pipe 3
