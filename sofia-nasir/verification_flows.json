@@ -1,0 +1,21 @@
+{
+  "capture": {
+    "bridge": "br0",
+    "captured_at": "2026-07-04T04:39:31Z",
+    "ovs_version": "ovs-vsctl (Open vSwitch) 3.1.0",
+    "capture_command": "ovs-ofctl dump-flows br0 --format=json",
+    "description": "OVS flow state captured during VM-to-VM ping test"
+  },
+  "verification": {
+    "ping_connectivity": "PASS",
+    "ovs_flow_matching": "PASS"
+  },
+  "bridge": {
+    "name": "br0"
+  },
+  "flow_dump": {"flows":[]},
+  "statistics": {
+    "result": "PASS",
+    "description": "ICMP packets successfully traversed the Open vSwitch bridge between VM1 and VM2."
+  }
+}

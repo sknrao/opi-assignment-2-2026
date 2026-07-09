@@ -1,0 +1,87 @@
+{
+  "meta": {
+    "description": "OVS flow evidence: datapath test pod-b(10.10.0.2) -> KubeVirt VM vm-a(10.10.0.1) over bridge br-ovs",
+    "captured_utc": "2026-07-04T18:29:14.853967+00:00",
+    "bridge": "br-ovs",
+    "ovs_version": "3.7.1",
+    "datapath_type": "netdev (userspace)",
+    "endpoints": "KubeVirt VM vm-a (10.10.0.1, MAC 36:35:c7:a5:95:fa) <-> pod-b (10.10.0.2, MAC 6a:41:40:fa:9c:f8)",
+    "environment": "Ubuntu Linux, single-node k3s + Multus + OVS-CNI; KubeVirt v1.8.4. vm-a is a real VirtualMachineInstance (phase=Running); its eth1 tap and pod-b's veth are both ports on br-ovs.",
+    "assignment_note": "The assignment suggests `ovs-ofctl dump-flows <bridge> --format=json`, but that flag does not exist in ovs-ofctl (verified on OVS 3.7.1: `ovs-ofctl dump-flows br-ovs --format=json` returns `ovs-ofctl: unrecognized option '--format=json'`, and --format/JSON is an ovs-vsctl / ovsdb-client feature, not an ovs-ofctl one). This file therefore replicates the intent: the REAL flow dumps are captured and serialized into machine-readable JSON, with the exact raw command output preserved verbatim under 'raw' so nothing is lost.",
+    "note": "Flows captured from REAL command output (ovs-ofctl dump-flows br-ovs + ovs-appctl dpctl/dump-flows -m + ovs-ofctl dump-ports br-ovs) and serialized to JSON. The datapath_flows include per-flow packet/byte counters that prove the ping traffic (ARP + ICMP) between the VM and the pod traversed the bridge. The VM's MAC (36:35:c7:a5:95:fa) matches the virtio-net device in the virt-launcher qemu command line. Raw text is preserved verbatim under 'raw'."
+  },
+  "openflow_flows": [
+    {
+      "cookie": "0x0",
+      "duration": "3827.140s",
+      "table": "0",
+      "n_packets": "100",
+      "n_bytes": "8140",
+      "idle_age": "0",
+      "priority": "0",
+      "actions": "NORMAL"
+    }
+  ],
+  "datapath_flows": [
+    {
+      "in_port": "veth49446cde",
+      "eth_src": "6a:41:40:fa:9c:f8",
+      "eth_dst": "ff:ff:ff:ff:ff:ff",
+      "eth_type": "0x0806",
+      "l3_l4": "arp(sip=10.10.0.2,tip=10.10.0.1,op=1,sha=6a:41:40:fa:9c:f8/00:00:00:00:00:00,tha=00:00:00:00:00:00/00:00:00:00:00:00)",
+      "packets": 0,
+      "bytes": 0,
+      "actions": "br-ovs,vethb1afa4b4",
+      "comment": "ARP who-has 10.10.0.1 broadcast from pod-b, flooded onto br-ovs toward the VM's port"
+    },
+    {
+      "in_port": "vethb1afa4b4",
+      "eth_src": "36:35:c7:a5:95:fa",
+      "eth_dst": "6a:41:40:fa:9c:f8",
+      "eth_type": "0x0806",
+      "l3_l4": "arp(sip=10.10.0.1/0.0.0.0,tip=10.10.0.2/0.0.0.0,op=2/0,sha=36:35:c7:a5:95:fa/00:00:00:00:00:00,tha=6a:41:40:fa:9c:f8/00:00:00:00:00:00)",
+      "packets": 1,
+      "bytes": 42,
+      "actions": "veth49446cde",
+      "comment": "ARP reply from the VM (10.10.0.1) back to pod-b"
+    },
+    {
+      "in_port": "veth49446cde",
+      "eth_src": "6a:41:40:fa:9c:f8",
+      "eth_dst": "36:35:c7:a5:95:fa",
+      "eth_type": "0x0806",
+      "l3_l4": "arp(sip=10.10.0.2/0.0.0.0,tip=10.10.0.1/0.0.0.0,op=2/0,sha=6a:41:40:fa:9c:f8/00:00:00:00:00:00,tha=36:35:c7:a5:95:fa/00:00:00:00:00:00)",
+      "packets": 0,
+      "bytes": 0,
+      "actions": "vethb1afa4b4",
+      "comment": "ARP reply from pod-b to the VM (unicast)"
+    },
+    {
+      "in_port": "veth49446cde",
+      "eth_src": "6a:41:40:fa:9c:f8",
+      "eth_dst": "36:35:c7:a5:95:fa",
+      "eth_type": "0x0800",
+      "l3_l4": "ipv4(src=10.10.0.2/0.0.0.0,dst=10.10.0.1/0.0.0.0,proto=1/0,tos=0/0,ttl=64/0,frag=no),icmp(type=8/0,code=0/0)",
+      "packets": 9,
+      "bytes": 882,
+      "actions": "vethb1afa4b4",
+      "comment": "ICMP echo request pod-b(10.10.0.2) -> VM(10.10.0.1), forwarded across br-ovs to the VM's port"
+    },
+    {
+      "in_port": "vethb1afa4b4",
+      "eth_src": "36:35:c7:a5:95:fa",
+      "eth_dst": "6a:41:40:fa:9c:f8",
+      "eth_type": "0x0800",
+      "l3_l4": "ipv4(src=10.10.0.1/0.0.0.0,dst=10.10.0.2/0.0.0.0,proto=1/0,tos=0/0,ttl=64/0,frag=no),icmp(type=0/0,code=0/0)",
+      "packets": 9,
+      "bytes": 882,
+      "actions": "veth49446cde",
+      "comment": "ICMP echo reply VM(10.10.0.1) -> pod-b(10.10.0.2), forwarded back across br-ovs"
+    }
+  ],
+  "raw": {
+    "ovs-ofctl dump-flows br-ovs": "NXST_FLOW reply (xid=0x4):\n cookie=0x0, duration=3827.140s, table=0, n_packets=100, n_bytes=8140, idle_age=0, priority=0 actions=NORMAL\n",
+    "ovs-appctl dpctl/dump-flows -m": "flow-dump from the main thread:\nufid:2a34c45b-4e10-46a3-9db7-971b64b430a4, recirc_id(0),dp_hash(0/0),skb_priority(0/0),in_port(veth49446cde),skb_mark(0/0),ct_state(0/0),ct_zone(0/0),ct_mark(0/0),ct_label(0/0),packet_type(ns=0,id=0),eth(src=6a:41:40:fa:9c:f8,dst=ff:ff:ff:ff:ff:ff),eth_type(0x0806),arp(sip=10.10.0.2,tip=10.10.0.1,op=1,sha=6a:41:40:fa:9c:f8/00:00:00:00:00:00,tha=00:00:00:00:00:00/00:00:00:00:00:00), packets:0, bytes:0, used:never, dp:ovs, actions:br-ovs,vethb1afa4b4, dp-extra-info:miniflow_bits(2,5)\nufid:bd6b3b5e-861d-4935-8105-2c549716b35b, recirc_id(0),dp_hash(0/0),skb_priority(0/0),in_port(vethb1afa4b4),skb_mark(0/0),ct_state(0/0),ct_zone(0/0),ct_mark(0/0),ct_label(0/0),packet_type(ns=0,id=0),eth(src=36:35:c7:a5:95:fa,dst=6a:41:40:fa:9c:f8),eth_type(0x0806),arp(sip=10.10.0.1/0.0.0.0,tip=10.10.0.2/0.0.0.0,op=2/0,sha=36:35:c7:a5:95:fa/00:00:00:00:00:00,tha=6a:41:40:fa:9c:f8/00:00:00:00:00:00), packets:1, bytes:42, used:4.101s, dp:ovs, actions:veth49446cde, dp-extra-info:miniflow_bits(2,3)\nufid:85760983-47b5-48b9-896b-7bef2ee0f14e, recirc_id(0),dp_hash(0/0),skb_priority(0/0),in_port(veth49446cde),skb_mark(0/0),ct_state(0/0),ct_zone(0/0),ct_mark(0/0),ct_label(0/0),packet_type(ns=0,id=0),eth(src=6a:41:40:fa:9c:f8,dst=36:35:c7:a5:95:fa),eth_type(0x0806),arp(sip=10.10.0.2/0.0.0.0,tip=10.10.0.1/0.0.0.0,op=2/0,sha=6a:41:40:fa:9c:f8/00:00:00:00:00:00,tha=36:35:c7:a5:95:fa/00:00:00:00:00:00), packets:0, bytes:0, used:never, dp:ovs, actions:vethb1afa4b4, dp-extra-info:miniflow_bits(2,3)\nufid:49b533f4-ce16-42f4-a424-c514b823b6b0, recirc_id(0),dp_hash(0/0),skb_priority(0/0),in_port(veth49446cde),skb_mark(0/0),ct_state(0/0),ct_zone(0/0),ct_mark(0/0),ct_label(0/0),packet_type(ns=0,id=0),eth(src=6a:41:40:fa:9c:f8,dst=36:35:c7:a5:95:fa),eth_type(0x0800),ipv4(src=10.10.0.2/0.0.0.0,dst=10.10.0.1/0.0.0.0,proto=1/0,tos=0/0,ttl=64/0,frag=no),icmp(type=8/0,code=0/0), packets:9, bytes:882, used:0.110s, dp:ovs, actions:vethb1afa4b4, dp-extra-info:miniflow_bits(2,4)\nufid:b57eabcb-73af-4f76-9fef-e9076173d69c, recirc_id(0),dp_hash(0/0),skb_priority(0/0),in_port(vethb1afa4b4),skb_mark(0/0),ct_state(0/0),ct_zone(0/0),ct_mark(0/0),ct_label(0/0),packet_type(ns=0,id=0),eth(src=36:35:c7:a5:95:fa,dst=6a:41:40:fa:9c:f8),eth_type(0x0800),ipv4(src=10.10.0.1/0.0.0.0,dst=10.10.0.2/0.0.0.0,proto=1/0,tos=0/0,ttl=64/0,frag=no),icmp(type=0/0,code=0/0), packets:9, bytes:882, used:0.109s, dp:ovs, actions:veth49446cde, dp-extra-info:miniflow_bits(2,4)\n",
+    "ovs-ofctl dump-ports br-ovs": "OFPST_PORT reply (xid=0x2): 3 ports\n  port LOCAL: rx pkts=15, bytes=1146, drop=0, errs=0, frame=0, over=0, crc=0\n           tx pkts=62, bytes=4908, drop=0, errs=0, coll=0\n  port  1: rx pkts=27, bytes=2210, drop=0, errs=0, frame=0, over=0, crc=0\n           tx pkts=64, bytes=5300, drop=0, errs=0, coll=0\n  port  2: rx pkts=59, bytes=4874, drop=0, errs=0, frame=0, over=0, crc=0\n           tx pkts=20, bytes=1760, drop=0, errs=0, coll=0\n"
+  }
+}

@@ -1,0 +1,8 @@
+# Grounding research — kept locally, not part of the submission
+.research/
+
+# Internal progress tracker — backstage notes, not part of the submission
+PROGRESS.md
+
+# Local render artifacts
+*.svg

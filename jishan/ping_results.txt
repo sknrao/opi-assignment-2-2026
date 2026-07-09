@@ -1,0 +1,13 @@
+=== Ping Test: test-ping pod -> CirrOS VM over OVS-backed interface ===
+=== OVS Network: 192.168.100.0/24 ===
+
+PING 192.168.100.100 (192.168.100.100): 56 data bytes
+64 bytes from 192.168.100.100: seq=0 ttl=63 time=1.363 ms
+64 bytes from 192.168.100.100: seq=1 ttl=63 time=0.831 ms
+64 bytes from 192.168.100.100: seq=2 ttl=63 time=0.556 ms
+64 bytes from 192.168.100.100: seq=3 ttl=63 time=1.359 ms
+64 bytes from 192.168.100.100: seq=4 ttl=63 time=0.622 ms
+
+--- 192.168.100.100 ping statistics ---
+5 packets transmitted, 5 packets received, 0% packet loss
+round-trip min/avg/max = 0.556/0.946/1.363 ms

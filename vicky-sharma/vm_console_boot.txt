@@ -1,0 +1,74 @@
+# KubeVirt VM (vm-a) serial-console boot log, proof the VM is real and self-configured its OVS interface.
+#
+# Captured from the virt-launcher guest-console-log:
+#   kubectl logs virt-launcher-vm-a-<id> -c guest-console-log
+#
+# Key lines to note:
+#   * "Platform: KubeVirt None/RHEL", "Virt-type: AMD-V"  -> a genuine KubeVirt-managed QEMU guest
+#   * network info: "eth1,up,10.10.0.1,24"                -> cloud-init brought eth1 up on the OVS net
+#   * ip-route: "10.10.0.0/24 dev eth1 src 10.10.0.1"     -> the VM routes the OVS subnet out eth1
+#   * the CirrOS banner + "vm-a login:"                   -> the guest fully booted to a login prompt
+#
+# The eth1 MAC (36:35:c7:a5:95:fa) is the same virtio-net device seen in the virt-launcher qemu
+# command line and in the OVS datapath flows (verification_flows.json), i.e. this VM's traffic is
+# exactly what crossed br-ovs during the ping.
+#
+# VMI status at capture:
+#   NAME   AGE   PHASE     IP           NODENAME   READY
+#   vm-a   16m   Running   10.42.0.14   <node>     True
+
+info: initramfs: up at 10.43
+info: copying initramfs to /dev/vda1
+info: initramfs loading root from /dev/vda1
+info: /etc/init.d/rc.sysinit: up at 17.91
+info: container: none
+Starting logging: OK
+Initializing random number generator... done.
+Starting acpid: OK
+mcb [info=/dev/vdb dev=/dev/vdb target=tmp unmount=true callback=mcu_drop_dev_arg]: mount '/dev/vdb' '-o,ro' '/tmp/nocloud.mp.T7aAf9'
+mcudda: fn=cp dev=/dev/vdb mp=/tmp/nocloud.mp.T7aAf9 : -a /tmp/cirros-ds.4guu4x/nocloud/raw
+Starting network...
+udhcpc (v1.23.2) started
+Sending discover...
+Sending select for 10.0.2.2...
+Lease of 10.0.2.2 obtained, lease time 86313600
+Top of dropbear init script
+Starting dropbear sshd: OK
+GROWROOT: NOCHANGE: partition 1 is size 71647. it cannot be grown
+/dev/root resized successfully [took 0.90s]
+=== system information ===
+Platform: KubeVirt None/RHEL
+Container: none
+Arch: x86_64
+CPU(s): 1 @ 3293.659 MHz
+Cores/Sockets/Threads: 1/1/1
+Virt-type: AMD-V
+RAM Size: 236MB
+Disks:
+NAME  MAJ:MIN     SIZE LABEL         MOUNTPOINT
+vda   253:0   46137344
+vda1  253:1   36683264 cirros-rootfs /
+vda15 253:15   8388608
+vdb   253:16   1048576 cidata
+=== network info ===
+if-info: lo,up,127.0.0.1,8,,
+if-info: eth0,up,10.0.2.2,24,fe80::80a:c3ff:fe7e:4ffb/64,
+if-info: eth1,up,10.10.0.1,24,fe80::3435:c7ff:fea5:95fa/64,
+ip-route:default via 10.0.2.1 dev eth0
+ip-route:10.0.2.0/24 dev eth0  src 10.0.2.2
+ip-route:10.10.0.0/24 dev eth1  src 10.10.0.1
+=== datasource: nocloud local ===
+instance-id: 633f9bc7-dc49-4b7f-a3f4-300249dd1e96
+name: N/A
+availability-zone: N/A
+local-hostname: vm-a
+launch-index: N/A
+=== cirros: current=0.4.0 latest=0.6.3 uptime=58.53 ===
+  ____               ____  ____
+ / __/ __ ____ ____ / __ \/ __/
+/ /__ / // __// __// /_/ /\ \
+\___//_//_/  /_/   \____/___/
+   http://cirros-cloud.net
+
+login as 'cirros' user. default password: 'gocubsgo'. use 'sudo' for root.
+vm-a login:

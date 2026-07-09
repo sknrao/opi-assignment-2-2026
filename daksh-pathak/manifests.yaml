@@ -1,0 +1,184 @@
+# This file is intentionally one multi-document manifest. Read from top to
+# bottom, it tells the story of the lab:
+#
+#   install the network add-ons
+#          ↓
+#   define two attachments to br-ovs
+#          ↓
+#   connect one peer pod and one VM
+#
+# The script applies these documents in phases because some resource types do
+# not exist until CNAO has installed their CustomResourceDefinitions.
+#
+# Phase 1 creates the home for the lab. The phase label lets the bootstrap
+# script apply this before any workload-specific custom resources.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ovs-lab
+  labels:
+    assignment.kubevirt.io/phase: addons
+---
+# CNAO owns both Multus and the OVS CNI installation. This is a cluster-scoped
+# resource even though the workloads themselves live in ovs-lab. Keeping the
+# declaration here makes the desired networking stack visible in the
+# submission instead of hiding it inside the Bash script.
+apiVersion: networkaddonsoperator.network.kubevirt.io/v1
+kind: NetworkAddonsConfig
+metadata:
+  name: cluster
+  labels:
+    assignment.kubevirt.io/phase: addons
+spec:
+  multus: {}
+  ovs: {}
+---
+# Host-local IPAM reserves exactly one address for the VM attachment. Because
+# CirrOS does not automatically configure this secondary NIC in this lab, the
+# matching address is also assigned to eth1 by the cloud-init script below.
+# Keeping both values explicit makes the test predictable and easy to inspect.
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: ovs-vm-net
+  namespace: ovs-lab
+  labels:
+    assignment.kubevirt.io/phase: workload
+spec:
+  config: |-
+    {
+      "cniVersion": "0.3.1",
+      "name": "ovs-vm-net",
+      "type": "ovs",
+      "bridge": "br-ovs",
+      "mtu": 1500,
+      "ipam": {
+        "type": "host-local",
+        "subnet": "192.168.100.0/24",
+        "rangeStart": "192.168.100.10",
+        "rangeEnd": "192.168.100.10"
+      }
+    }
+---
+# A separate NAD gives the test pod its own fixed address while attaching it to
+# the same layer-2 OVS bridge as the VM. The two one-address ranges also avoid
+# depending on whichever workload happens to start first.
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: ovs-peer-net
+  namespace: ovs-lab
+  labels:
+    assignment.kubevirt.io/phase: workload
+spec:
+  config: |-
+    {
+      "cniVersion": "0.3.1",
+      "name": "ovs-peer-net",
+      "type": "ovs",
+      "bridge": "br-ovs",
+      "mtu": 1500,
+      "ipam": {
+        "type": "host-local",
+        "subnet": "192.168.100.0/24",
+        "rangeStart": "192.168.100.20",
+        "rangeEnd": "192.168.100.20"
+      }
+    }
+---
+# This small peer stays alive so the script can execute ping from its OVS-backed
+# net1 interface. BusyBox is multi-architecture and includes the ping utility.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ovs-peer
+  namespace: ovs-lab
+  labels:
+    app: ovs-peer
+    assignment.kubevirt.io/phase: workload
+  annotations:
+    # Multus creates this as net1; the ordinary Kubernetes interface remains
+    # available as eth0.
+    k8s.v1.cni.cncf.io/networks: ovs-peer-net
+spec:
+  restartPolicy: Always
+  containers:
+    - name: peer
+      image: busybox:1.36.1
+      imagePullPolicy: IfNotPresent
+      command:
+        - /bin/sh
+        - -c
+        - "trap : TERM INT; sleep 2147483647 & wait"
+      resources:
+        requests:
+          cpu: 10m
+          memory: 16Mi
+        limits:
+          memory: 64Mi
+---
+# The primary masquerade interface keeps normal Kubernetes connectivity. The
+# second virtio interface is bridged into the Multus/OVS secondary network.
+# On an emulated ARM host, cluster_setup.sh adds a compatible CPU model while
+# rendering this document; keeping that local workaround out of this manifest
+# leaves the submitted VM portable to KVM-capable Linux hosts.
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: ovs-vm
+  namespace: ovs-lab
+  labels:
+    app: ovs-vm
+    assignment.kubevirt.io/phase: vm
+spec:
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        app: ovs-vm
+    spec:
+      terminationGracePeriodSeconds: 0
+      domain:
+        resources:
+          requests:
+            memory: 256Mi
+        devices:
+          disks:
+            - name: containerdisk
+              disk:
+                bus: virtio
+            - name: cloudinit
+              disk:
+                bus: virtio
+          interfaces:
+            - name: default
+              masquerade: {}
+              model: virtio
+              macAddress: "02:00:00:00:00:10"
+            - name: ovs-secondary
+              bridge: {}
+              model: virtio
+              macAddress: "02:00:00:00:01:10"
+      networks:
+        # Interface and network names pair up explicitly. "default" uses the
+        # normal pod network; "ovs-secondary" selects the NAD defined above.
+        - name: default
+          pod: {}
+        - name: ovs-secondary
+          multus:
+            networkName: ovs-lab/ovs-vm-net
+      volumes:
+        - name: containerdisk
+          containerDisk:
+            image: quay.io/kubevirt/cirros-container-disk-demo:v1.8.2
+            imagePullPolicy: IfNotPresent
+        - name: cloudinit
+          cloudInitNoCloud:
+            userData: |-
+              #!/bin/sh
+              # The bundled CirrOS 0.5 image executes shell user-data but does
+              # not process modern cloud-config network v2 documents.
+              # eth0 is the primary interface, so the OVS-backed NIC is eth1.
+              ip link set eth1 up
+              ip addr flush dev eth1
+              ip addr add 192.168.100.10/24 dev eth1

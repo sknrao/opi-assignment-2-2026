@@ -1,0 +1,40 @@
+# kubevirt-kvm-daemonset.yaml
+#
+# DaemonSet for kubevirt/kubernetes-device-plugins/kvm, patched for k3s.
+#
+# Fixes:
+#   - Uses the correct kubelet socket path for k3s: /run/k3s/containerd/...
+#   - Uses the v1 device plugin API (not v1beta1).
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: device-plugin-kvm
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      name: device-plugin-kvm
+  template:
+    metadata:
+      labels:
+        name: device-plugin-kvm
+    spec:
+      containers:
+      - name: device-plugin-kvm
+        image: quay.io/kubevirt/kubernetes-device-plugins:v0.26.0
+        command: ["/kvm/kubevirt-kvm-plugin", "--kubelet-device-plugin-path=/var/lib/kubelet/device-plugins/kubelet.sock"]
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: device-plugin
+          mountPath: /var/lib/kubelet/device-plugins
+        - name: dev
+          mountPath: /dev
+      volumes:
+      - name: device-plugin
+        hostPath:
+          path: /var/lib/kubelet/device-plugins
+      - name: dev
+        hostPath:
+          path: /dev

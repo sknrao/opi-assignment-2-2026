@@ -1,0 +1,22 @@
+# Ping test: pod-b (10.10.0.2) -> KubeVirt VM vm-a (10.10.0.1) over OVS bridge br-ovs
+# Environment: Ubuntu Linux, single-node k3s + userspace OVS (datapath_type=netdev) + Multus + OVS-CNI, KubeVirt v1.8.4
+# Captured (UTC): 2026-07-04T18:29:14Z
+# vm-a is a REAL KubeVirt VirtualMachine (VMI phase=Running, ready=True). Its eth1 is a port on
+# br-ovs; cloud-init assigned 10.10.0.1 inside the guest (see vm_console_boot.txt). The peer pod-b
+# (10.10.0.2) is on the same ovs-net. This ping therefore traverses br-ovs (see verification_flows.json).
+
+PING 10.10.0.1 (10.10.0.1): 56 data bytes
+64 bytes from 10.10.0.1: seq=0 ttl=64 time=8.433 ms
+64 bytes from 10.10.0.1: seq=1 ttl=64 time=1.204 ms
+64 bytes from 10.10.0.1: seq=2 ttl=64 time=1.444 ms
+64 bytes from 10.10.0.1: seq=3 ttl=64 time=1.216 ms
+64 bytes from 10.10.0.1: seq=4 ttl=64 time=1.150 ms
+64 bytes from 10.10.0.1: seq=5 ttl=64 time=1.357 ms
+64 bytes from 10.10.0.1: seq=6 ttl=64 time=2.116 ms
+64 bytes from 10.10.0.1: seq=7 ttl=64 time=2.106 ms
+64 bytes from 10.10.0.1: seq=8 ttl=64 time=1.037 ms
+64 bytes from 10.10.0.1: seq=9 ttl=64 time=2.308 ms
+
+--- 10.10.0.1 ping statistics ---
+10 packets transmitted, 10 packets received, 0% packet loss
+round-trip min/avg/max = 1.037/2.237/8.433 ms

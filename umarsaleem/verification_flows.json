@@ -1,0 +1,58 @@
+{
+  "_comment": "OVS flow dump captured on 2026-07-06 from the live cluster. The OVS version on this host (3.5.0) does not support ovs-ofctl --format=json; the textual dump-flows output is preserved here as the 'raw' field. The structured_fields below parse that output for machine consumption.",
+  "_spec_constraint": "The assignment's expected command is 'ovs-ofctl dump-flows <bridge> --format=json'. This OVS build (3.5.0) does NOT recognize the --format=json flag (verified: 'ovs-ofctl: unrecognized option --format=json'). It also does not support -F xml ('xml: unknown flow protocol'). To produce a machine-readable flow dump that is still valid JSON, the textual output was captured (raw) and re-encoded as JSON with a structured_fields block. The 'raw' field preserves the unmodified ovs-ofctl output, so the file remains faithful to the tool's output even though the wrapping is hand-written.",
+  "_generated_after": "VM is Running, ping host<->VM succeeds, OVS bridge br-ovs has VM veth attached with traffic.",
+  "_command": "sudo ovs-ofctl dump-flows br-ovs",
+  "ovs_version": "3.5.0",
+  "bridge": "br-ovs",
+  "raw": " cookie=0x0, duration=188283.697s, table=0, n_packets=378, n_bytes=35828, priority=0 actions=NORMAL\n",
+  "structured_fields": {
+    "default_flow": {
+      "cookie": "0x0",
+      "duration_seconds": 188283.697,
+      "table": 0,
+      "n_packets": 378,
+      "n_bytes": 35828,
+      "priority": 0,
+      "actions": "NORMAL"
+    }
+  },
+  "_port_state": {
+    "_note": "ovs-ofctl dump-ports br-ovs output captured at same time",
+    "vethbc7290b3": {
+      "note": "host-side leg of the VM's secondary-network veth (pod6b4853bd4f2 inside the launcher pod)",
+      "rx_pkts": 64,
+      "rx_bytes": 5772,
+      "tx_pkts": 95,
+      "tx_bytes": 11966,
+      "drop": 0,
+      "errs": 0
+    },
+    "veth7a4cd2ef": {
+      "note": "host-side leg of the leftover test-pod veth (podFINAL inside the test pod cni-final)",
+      "rx_pkts": 18,
+      "rx_bytes": 1356,
+      "tx_pkts": 180,
+      "tx_bytes": 19507,
+      "drop": 0,
+      "errs": 0
+    },
+    "LOCAL_br_ovs": {
+      "note": "the host's br-ovs interface (carries traffic to/from the host IP 192.168.200.1)",
+      "rx_pkts": 117,
+      "rx_bytes": 8208,
+      "tx_pkts": 261,
+      "tx_bytes": 25982,
+      "drop": 0,
+      "errs": 0
+    }
+  },
+  "_vm_evidence": {
+    "vm_eth0_mac": "52:54:00:6c:6f:01",
+    "vm_ip": "192.168.200.2/30",
+    "host_ip": "192.168.200.1/30",
+    "ping_packets_transmitted": 4,
+    "ping_packets_received": 4,
+    "ping_loss_pct": 0
+  }
+}
