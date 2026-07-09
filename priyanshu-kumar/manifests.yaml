@@ -1,0 +1,164 @@
+# manifests.yaml - OPI Assignment 2
+
+# All Custom Resources for the OVS datapath demo:
+#   1. NetworkAttachmentDefinition 'ovs-net'         → OVS-CNI on br1 (untagged)
+#   2. NetworkAttachmentDefinition 'ovs-net-vlan100' → OVS-CNI on br1, VLAN 100 access ports
+#   3. VirtualMachine vm1 - eth1 10.10.0.1/24 (ovs-net), eth2 10.10.100.1/24 (vlan100)
+#   4. VirtualMachine vm2 - eth1 10.10.0.2/24 (ovs-net), eth2 10.10.100.2/24 (vlan100)
+
+# Both subnets exist ONLY on br1, so any vm1↔vm2 traffic on them can only have crossed the OVS datapath; the VLAN network additionally proves tagged (access-port) forwarding on the same bridge.
+
+# Pinned image: quay.io/kubevirt/cirros-container-disk-demo:v1.8.4
+---
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: ovs-net
+  namespace: default
+  annotations:
+    k8s.v1.cni.cncf.io/resourceName: ovs-cni.network.kubevirt.io/br1
+spec:
+  config: |
+    {
+      "cniVersion": "0.4.0",
+      "type": "ovs",
+      "bridge": "br1"
+    }
+---
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: ovs-net-vlan100
+  namespace: default
+  annotations:
+    k8s.v1.cni.cncf.io/resourceName: ovs-cni.network.kubevirt.io/br1
+spec:
+  config: |
+    {
+      "cniVersion": "0.4.0",
+      "type": "ovs",
+      "bridge": "br1",
+      "vlan": 100
+    }
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm1
+  namespace: default
+  labels:
+    app: ovs-datapath-demo
+spec:
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        app: ovs-datapath-demo
+        kubevirt.io/vm: vm1
+    spec:
+      domain:
+        cpu:
+          cores: 1
+        memory:
+          guest: 128Mi
+        devices:
+          disks:
+            - name: containerdisk
+              disk:
+                bus: virtio
+            - name: cloudinitdisk
+              disk:
+                bus: virtio
+          interfaces:
+            - name: default
+              masquerade: {}
+            - name: ovs
+              bridge: {}
+              macAddress: "02:00:00:00:00:01"
+            - name: ovs-vlan
+              bridge: {}
+              macAddress: "02:00:00:00:01:01"
+      networks:
+        - name: default
+          pod: {}
+        - name: ovs
+          multus:
+            networkName: ovs-net
+        - name: ovs-vlan
+          multus:
+            networkName: ovs-net-vlan100
+      terminationGracePeriodSeconds: 0
+      volumes:
+        - name: containerdisk
+          containerDisk:
+            image: quay.io/kubevirt/cirros-container-disk-demo:v1.8.4
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |
+              #!/bin/sh
+              # Static IPs on the OVS-backed interfaces (subnets live only on br1)
+              sudo ip addr add 10.10.0.1/24 dev eth1
+              sudo ip link set eth1 up
+              sudo ip addr add 10.10.100.1/24 dev eth2
+              sudo ip link set eth2 up
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm2
+  namespace: default
+  labels:
+    app: ovs-datapath-demo
+spec:
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        app: ovs-datapath-demo
+        kubevirt.io/vm: vm2
+    spec:
+      domain:
+        cpu:
+          cores: 1
+        memory:
+          guest: 128Mi
+        devices:
+          disks:
+            - name: containerdisk
+              disk:
+                bus: virtio
+            - name: cloudinitdisk
+              disk:
+                bus: virtio
+          interfaces:
+            - name: default
+              masquerade: {}
+            - name: ovs
+              bridge: {}
+              macAddress: "02:00:00:00:00:02"
+            - name: ovs-vlan
+              bridge: {}
+              macAddress: "02:00:00:00:01:02"
+      networks:
+        - name: default
+          pod: {}
+        - name: ovs
+          multus:
+            networkName: ovs-net
+        - name: ovs-vlan
+          multus:
+            networkName: ovs-net-vlan100
+      terminationGracePeriodSeconds: 0
+      volumes:
+        - name: containerdisk
+          containerDisk:
+            image: quay.io/kubevirt/cirros-container-disk-demo:v1.8.4
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |
+              #!/bin/sh
+              # Static IPs on the OVS-backed interfaces (subnets live only on br1)
+              sudo ip addr add 10.10.0.2/24 dev eth1
+              sudo ip link set eth1 up
+              sudo ip addr add 10.10.100.2/24 dev eth2
+              sudo ip link set eth2 up

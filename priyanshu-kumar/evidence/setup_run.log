@@ -1,0 +1,183 @@
+
+[1;34m[13:47:42][0m cluster_setup.sh starting (cluster=ovs-datapath, bridge=br1)
+
+[1;34m[13:47:42][0m Checking prerequisites
+[1;32m  ✔ linux/amd64, docker, kind, kubectl, virtctl, jq, python3-pexpect present[0m
+
+[1;34m[13:47:42][0m Creating kind cluster 'ovs-datapath' (pinned node image)
+Creating cluster "ovs-datapath" ...
+ • Ensuring node image (kindest/node:v1.36.1) 🖼  ...
+ ✓ Ensuring node image (kindest/node:v1.36.1) 🖼
+ • Preparing nodes 📦   ...
+ ✓ Preparing nodes 📦 
+ • Writing configuration 📜  ...
+ ✓ Writing configuration 📜
+ • Starting control-plane 🕹️  ...
+ ✓ Starting control-plane 🕹️
+ • Installing CNI 🔌  ...
+ ✓ Installing CNI 🔌
+ • Installing StorageClass 💾  ...
+ ✓ Installing StorageClass 💾
+ • Waiting ≤ 2m0s for control-plane = Ready ⏳  ...
+ ✓ Waiting ≤ 2m0s for control-plane = Ready ⏳
+ • Ready after 17s 💚
+Set kubectl context to "kind-ovs-datapath"
+You can now use your cluster with:
+
+kubectl cluster-info --context kind-ovs-datapath
+
+Thanks for using kind! 😊
+node/ovs-datapath-control-plane condition met
+[1;32m  ✔ node Ready: node/ovs-datapath-control-plane[0m
+
+[1;34m[13:48:10][0m Installing Open vSwitch + bridge 'br1' inside the node
+Synchronizing state of openvswitch-switch.service with SysV service script with /usr/lib/systemd/systemd-sysv-install.
+Executing: /usr/lib/systemd/systemd-sysv-install enable openvswitch-switch
+[1;32m  ✔ OVS running (ovs-vsctl (Open vSwitch) 3.5.0); bridge 'br1' exists[0m
+[1;32m  ✔ JSON flow-dump pipeline works (ovs-ofctl | ovs-flowviz)[0m
+
+[1;34m[13:48:28][0m Deploying Multus v4.3.0 + OVS-CNI v0.39.0 (images pinned)
+customresourcedefinition.apiextensions.k8s.io/network-attachment-definitions.k8s.cni.cncf.io created
+clusterrole.rbac.authorization.k8s.io/multus created
+clusterrolebinding.rbac.authorization.k8s.io/multus created
+serviceaccount/multus created
+configmap/multus-daemon-config created
+daemonset.apps/kube-multus-ds created
+daemonset.apps/ovs-cni-amd64 created
+clusterrole.rbac.authorization.k8s.io/ovs-cni-marker-cr created
+clusterrolebinding.rbac.authorization.k8s.io/ovs-cni-marker-crb created
+serviceaccount/ovs-cni-marker created
+Waiting for daemon set "kube-multus-ds" rollout to finish: 0 of 1 updated pods are available...
+daemon set "kube-multus-ds" successfully rolled out
+Waiting for daemon set "ovs-cni-amd64" rollout to finish: 0 of 1 updated pods are available...
+daemon set "ovs-cni-amd64" successfully rolled out
+node/ovs-datapath-control-plane condition met
+[1;32m  ✔ Multus + OVS-CNI rolled out; marker advertises 'ovs-cni.network.kubevirt.io/br1'[0m
+
+[1;34m[13:49:16][0m Deploying KubeVirt v1.8.4
+namespace/kubevirt created
+customresourcedefinition.apiextensions.k8s.io/kubevirts.kubevirt.io created
+priorityclass.scheduling.k8s.io/kubevirt-cluster-critical created
+clusterrole.rbac.authorization.k8s.io/kubevirt.io:operator created
+serviceaccount/kubevirt-operator created
+role.rbac.authorization.k8s.io/kubevirt-operator created
+rolebinding.rbac.authorization.k8s.io/kubevirt-operator-rolebinding created
+clusterrole.rbac.authorization.k8s.io/kubevirt-operator created
+clusterrolebinding.rbac.authorization.k8s.io/kubevirt-operator created
+Warning: spec.template.spec.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[1].matchExpressions[0].key: node-role.kubernetes.io/master is use "node-role.kubernetes.io/control-plane" instead
+deployment.apps/virt-operator created
+Waiting for deployment "virt-operator" rollout to finish: 0 out of 2 new replicas have been updated...
+Waiting for deployment "virt-operator" rollout to finish: 0 of 2 updated replicas are available...
+Waiting for deployment "virt-operator" rollout to finish: 1 of 2 updated replicas are available...
+deployment "virt-operator" successfully rolled out
+kubevirt.kubevirt.io/kubevirt created
+[1;32m  ✔ /dev/kvm present → hardware virtualization (KVM)[0m
+kubevirt.kubevirt.io/kubevirt condition met
+[1;32m  ✔ KubeVirt Available[0m
+
+[1;34m[13:52:34][0m Applying manifests.yaml (NADs ovs-net + ovs-net-vlan100, vm1 + vm2)
+networkattachmentdefinition.k8s.cni.cncf.io/ovs-net created
+networkattachmentdefinition.k8s.cni.cncf.io/ovs-net-vlan100 created
+virtualmachine.kubevirt.io/vm1 created
+virtualmachine.kubevirt.io/vm2 created
+virtualmachineinstance.kubevirt.io/vm1 condition met
+virtualmachineinstance.kubevirt.io/vm2 condition met
+virtualmachineinstance.kubevirt.io/vm1 condition met
+virtualmachineinstance.kubevirt.io/vm2 condition met
+[1;32m  ✔ vm1 + vm2 Running[0m
+
+[1;34m[13:52:57][0m Attachment gates: multus network-status + OVS ports on br1
+[1;32m  ✔ PASS: vm1 network-status includes default/ovs-net[0m
+[1;32m  ✔ PASS: vm1 network-status includes default/ovs-net-vlan100[0m
+[1;32m  ✔ PASS: vm2 network-status includes default/ovs-net[0m
+[1;32m  ✔ PASS: vm2 network-status includes default/ovs-net-vlan100[0m
+[1;32m  ✔ PASS: br1 carries ≥4 VM ports[0m
+[1;32m  ✔ PASS: 2 ports have OVS access tag=100 (VLAN NAD honored)[0m
+
+[1;34m[13:52:57][0m VM ATTACHMENT GATES PASS
+
+[1;34m[13:52:57][0m Datapath verification: vm1 → vm2 over br1
+
+[1;34m[13:52:57][0m Warm-up ping (FDB population for port mapping)
+[1;32m  ✔ vm1 eth1 is OVS port 2 (vethb080c4e4); starting tcpdump on it[0m
+Successfully connected to vm1 console. Press Ctrl+] or Ctrl+5 to exit console.
+
+login as 'cirros' user. default password: 'gocubsgo'. use 'sudo' for root.
+vm1 login: cirros
+Password: 
+$ ping -c 20 10.10.0.2
+PING 10.10.0.2 (10.10.0.2): 56 data bytes
+64 bytes from 10.10.0.2: seq=0 ttl=64 time=0.290 ms
+64 bytes from 10.10.0.2: seq=1 ttl=64 time=0.380 ms
+64 bytes from 10.10.0.2: seq=2 ttl=64 time=0.383 ms
+64 bytes from 10.10.0.2: seq=3 ttl=64 time=0.410 ms
+64 bytes from 10.10.0.2: seq=4 ttl=64 time=0.479 ms
+64 bytes from 10.10.0.2: seq=5 ttl=64 time=0.766 ms
+64 bytes from 10.10.0.2: seq=6 ttl=64 time=0.387 ms
+64 bytes from 10.10.0.2: seq=7 ttl=64 time=0.873 ms
+64 bytes from 10.10.0.2: seq=8 ttl=64 time=0.408 ms
+64 bytes from 10.10.0.2: seq=9 ttl=64 time=1.098 ms
+64 bytes from 10.10.0.2: seq=10 ttl=64 time=0.567 ms
+64 bytes from 10.10.0.2: seq=11 ttl=64 time=0.844 ms
+64 bytes from 10.10.0.2: seq=12 ttl=64 time=0.314 ms
+64 bytes from 10.10.0.2: seq=13 ttl=64 time=0.730 ms
+64 bytes from 10.10.0.2: seq=14 ttl=64 time=0.295 ms
+64 bytes from 10.10.0.2: seq=15 ttl=64 time=0.798 ms
+64 bytes from 10.10.0.2: seq=16 ttl=64 time=0.556 ms
+64 bytes from 10.10.0.2: seq=17 ttl=64 time=0.918 ms
+64 bytes from 10.10.0.2: seq=18 ttl=64 time=0.795 ms
+64 bytes from 10.10.0.2: seq=19 ttl=64 time=0.480 ms
+
+--- 10.10.0.2 ping statistics ---
+20 packets transmitted, 20 packets received, 0% packet loss
+round-trip min/avg/max = 0.290/0.588/1.098 ms
+$ 
+[1;34m[13:53:27][0m VLAN-100 ping vm1 → vm2 over eth2
+Successfully connected to vm1 console. Press Ctrl+] or Ctrl+5 to exit console.
+
+login as 'cirros' user. default password: 'gocubsgo'. use 'sudo' for root.
+vm1 login: cirros
+Password: 
+$ ping -c 20 10.10.100.2
+PING 10.10.100.2 (10.10.100.2): 56 data bytes
+64 bytes from 10.10.100.2: seq=0 ttl=64 time=0.632 ms
+64 bytes from 10.10.100.2: seq=1 ttl=64 time=0.417 ms
+64 bytes from 10.10.100.2: seq=2 ttl=64 time=0.335 ms
+64 bytes from 10.10.100.2: seq=3 ttl=64 time=0.549 ms
+64 bytes from 10.10.100.2: seq=4 ttl=64 time=0.311 ms
+64 bytes from 10.10.100.2: seq=5 ttl=64 time=0.273 ms
+64 bytes from 10.10.100.2: seq=6 ttl=64 time=0.306 ms
+64 bytes from 10.10.100.2: seq=7 ttl=64 time=0.359 ms
+64 bytes from 10.10.100.2: seq=8 ttl=64 time=0.335 ms
+64 bytes from 10.10.100.2: seq=9 ttl=64 time=0.208 ms
+64 bytes from 10.10.100.2: seq=10 ttl=64 time=0.354 ms
+64 bytes from 10.10.100.2: seq=11 ttl=64 time=0.249 ms
+64 bytes from 10.10.100.2: seq=12 ttl=64 time=0.407 ms
+64 bytes from 10.10.100.2: seq=13 ttl=64 time=0.306 ms
+64 bytes from 10.10.100.2: seq=14 ttl=64 time=0.396 ms
+64 bytes from 10.10.100.2: seq=15 ttl=64 time=0.614 ms
+64 bytes from 10.10.100.2: seq=16 ttl=64 time=0.433 ms
+64 bytes from 10.10.100.2: seq=17 ttl=64 time=0.436 ms
+64 bytes from 10.10.100.2: seq=18 ttl=64 time=0.467 ms
+64 bytes from 10.10.100.2: seq=19 ttl=64 time=0.314 ms
+
+--- 10.10.100.2 ping statistics ---
+20 packets transmitted, 20 packets received, 0% packet loss
+round-trip min/avg/max = 0.208/0.385/0.632 ms
+$ 
+[1;34m[13:53:48][0m Datapath PASS/FAIL gates
+[1;32m  ✔ PASS: ping vm1→vm2: 0% packet loss[0m
+[1;32m  ✔ PASS: NORMAL flow n_packets delta ≥ 40 (got 161)[0m
+[1;32m  ✔ PASS: FDB contains vm1 MAC 02:00:00:00:00:01[0m
+[1;32m  ✔ PASS: FDB contains vm2 MAC 02:00:00:00:00:02[0m
+[1;32m  ✔ PASS: datapath megaflow vm1→vm2 (pinned MACs, IPv4, 21 pkts ≥ 15)[0m
+[1;32m  ✔ PASS: datapath megaflow vm2→vm1 (pinned MACs, IPv4, 21 pkts ≥ 15)[0m
+[1;32m  ✔ PASS: pcap on vm1 port: ≥ 15 ICMP echo requests (got 20)[0m
+[1;32m  ✔ PASS: pcap on vm1 port: ≥ 15 ICMP echo replies (got 20)[0m
+[1;32m  ✔ PASS: VLAN-100 ping vm1→vm2: 0% packet loss[0m
+[1;32m  ✔ PASS: FDB has vm1 eth2 MAC 02:00:00:00:01:01 on VLAN 100[0m
+[1;32m  ✔ PASS: FDB has vm2 eth2 MAC 02:00:00:00:01:02 on VLAN 100[0m
+
+[1;34m[13:53:48][0m ALL DATAPATH GATES PASS
+
+[1;34m[13:53:48][0m COMPLETE: cluster + OVS + VMs deployed, datapath verified. Artifacts: verification_flows.json, ping_results.txt, evidence/

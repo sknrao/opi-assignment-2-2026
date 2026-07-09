@@ -1,0 +1,11 @@
+OFPST_PORT reply (xid=0x2): 5 ports
+  port  4: rx pkts=58, bytes=5052, drop=0, errs=0, frame=0, over=0, crc=0
+           tx pkts=65, bytes=5678, drop=0, errs=0, coll=0
+  port LOCAL: rx pkts=0, bytes=0, drop=0, errs=0, frame=0, over=0, crc=0
+           tx pkts=0, bytes=0, drop=0, errs=0, coll=0
+  port  1: rx pkts=60, bytes=5248, drop=0, errs=0, frame=0, over=0, crc=0
+           tx pkts=141, bytes=12022, drop=0, errs=0, coll=0
+  port  2: rx pkts=61, bytes=5338, drop=0, errs=0, frame=0, over=0, crc=0
+           tx pkts=140, bytes=11932, drop=0, errs=0, coll=0
+  port  3: rx pkts=59, bytes=5142, drop=0, errs=0, frame=0, over=0, crc=0
+           tx pkts=65, bytes=5678, drop=0, errs=0, coll=0

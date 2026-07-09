@@ -1,0 +1,2 @@
+command: docker exec ovs-datapath-control-plane bash -c "ovs-ofctl dump-flows br1 | ovs-flowviz openflow json"
+timestamp: 2026-07-08T13:52:57Z

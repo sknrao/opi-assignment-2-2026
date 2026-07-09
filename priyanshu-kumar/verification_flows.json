@@ -1,0 +1,23 @@
+[
+    {
+        "orig": "cookie=0x0, duration=318.684s, table=0, n_packets=237, n_bytes=20690, idle_age=1, priority=0 actions=NORMAL",
+        "info": {
+            "cookie": 0,
+            "duration": 318.684,
+            "table": 0,
+            "n_packets": 237,
+            "n_bytes": 20690,
+            "idle_age": 1.0
+        },
+        "match": {
+            "priority": 0
+        },
+        "actions": [
+            {
+                "output": {
+                    "port": "NORMAL"
+                }
+            }
+        ]
+    }
+]

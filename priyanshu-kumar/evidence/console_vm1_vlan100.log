@@ -1,0 +1,32 @@
+Successfully connected to vm1 console. Press Ctrl+] or Ctrl+5 to exit console.
+
+login as 'cirros' user. default password: 'gocubsgo'. use 'sudo' for root.
+vm1 login: cirros
+Password: 
+$ ping -c 20 10.10.100.2
+PING 10.10.100.2 (10.10.100.2): 56 data bytes
+64 bytes from 10.10.100.2: seq=0 ttl=64 time=0.632 ms
+64 bytes from 10.10.100.2: seq=1 ttl=64 time=0.417 ms
+64 bytes from 10.10.100.2: seq=2 ttl=64 time=0.335 ms
+64 bytes from 10.10.100.2: seq=3 ttl=64 time=0.549 ms
+64 bytes from 10.10.100.2: seq=4 ttl=64 time=0.311 ms
+64 bytes from 10.10.100.2: seq=5 ttl=64 time=0.273 ms
+64 bytes from 10.10.100.2: seq=6 ttl=64 time=0.306 ms
+64 bytes from 10.10.100.2: seq=7 ttl=64 time=0.359 ms
+64 bytes from 10.10.100.2: seq=8 ttl=64 time=0.335 ms
+64 bytes from 10.10.100.2: seq=9 ttl=64 time=0.208 ms
+64 bytes from 10.10.100.2: seq=10 ttl=64 time=0.354 ms
+64 bytes from 10.10.100.2: seq=11 ttl=64 time=0.249 ms
+64 bytes from 10.10.100.2: seq=12 ttl=64 time=0.407 ms
+64 bytes from 10.10.100.2: seq=13 ttl=64 time=0.306 ms
+64 bytes from 10.10.100.2: seq=14 ttl=64 time=0.396 ms
+64 bytes from 10.10.100.2: seq=15 ttl=64 time=0.614 ms
+64 bytes from 10.10.100.2: seq=16 ttl=64 time=0.433 ms
+64 bytes from 10.10.100.2: seq=17 ttl=64 time=0.436 ms
+64 bytes from 10.10.100.2: seq=18 ttl=64 time=0.467 ms
+64 bytes from 10.10.100.2: seq=19 ttl=64 time=0.314 ms
+
+--- 10.10.100.2 ping statistics ---
+20 packets transmitted, 20 packets received, 0% packet loss
+round-trip min/avg/max = 0.208/0.385/0.632 ms
+$ 
